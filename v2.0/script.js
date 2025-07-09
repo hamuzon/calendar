@@ -32,7 +32,7 @@
   const STORAGE_EVENTS = "calendar_events";
   const STORAGE_VIEW = "calendar_view";
   const STORAGE_SETTINGS = "calendar_settings";
-  const CALENDAR_VERSION = "1.0";
+ const CALENDAR_VERSION = "2.0";;
 
   // 日本語の月名
   const monthNamesJP = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
