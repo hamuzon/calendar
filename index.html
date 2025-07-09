@@ -18,5 +18,20 @@
     <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
     <a class="version-btn" href="v2.0/index.html">📆 v2.0 🖋️</a>
   </div>
+
+  <section style="max-width: 500px; margin-top: 3rem; text-align: left;">
+    <h2>JSONファイル名の命名規則の違い</h2>
+
+    <h3>v1.0 のファイル名</h3>
+    <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
+    <p><code>例: calendar_events_20250709_150230.json</code></p>
+
+    <h3>v2.0 のファイル名</h3>
+    <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
+    <p><code>例: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
+
+    <p>v1.0 と v2.0 はファイル名だけでなくJSONの中身も異なり互換性はありません。<br>
+    それぞれのバージョンに合わせてファイル操作を行ってください。</p>
+  </section>
 </body>
 </html>
