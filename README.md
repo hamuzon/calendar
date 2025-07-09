@@ -13,14 +13,6 @@
 - UIは和風テイストで、シンプルながら使いやすさ重視。  
 - FC2、GitHub Pages、Cloudflare Pagesなどの静的ホスティングで動作可能。
 
-## ファイル構成
-
-- `index.html` - メインHTMLファイル。  
-- `style.css` - CSSファイル。  
-- `script.js` - JavaScriptファイル。  
-- `icon-light.svg` - ヘッダー用SVGアイコン。  
-- `README.md` - 本ファイル。
-
 ## 使い方Offline
 0. ダウロードします
 1. `index.html` をブラウザで開きます。  
