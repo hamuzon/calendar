@@ -351,6 +351,21 @@ loadJsonInput.addEventListener("change", e => {
   e.target.value = "";
 });
 
+// --- 月移動・今日ボタンのイベント追加 ---
+prevMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() - 1);
+  drawCalendar(currentDate);
+});
+nextMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  drawCalendar(currentDate);
+});
+todayBtn.addEventListener("click", () => {
+  currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  drawCalendar(currentDate);
+});
+
 // --- 初期化 ---
 loadFromLocalStorage();
 drawCalendar(currentDate);
