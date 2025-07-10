@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>カレンダー / Calendar</title>
+<link rel="icon" href="icon-light.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <img src="icon-light.svg" alt="Icon" id="header-icon" />
+  <h1>カレンダー / Calendar</h1>
+  <button id="settings-btn" aria-label="設定 / Settings" title="設定">⚙️</button>
+</header>
+
+<div id="calendar">
+  <div id="calendar-header">
+    <button id="prev-month" aria-label="前の月">&lt;</button>
+    <div id="month-year" aria-live="polite"></div>
+    <button id="next-month" aria-label="次の月">&gt;</button>
+  </div>
+  <table role="grid" aria-label="カレンダー">
+    <thead>
+      <tr>
+        <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+      </tr>
+    </thead>
+    <tbody id="calendar-body"></tbody>
+  </table>
+</div>
+
+<button id="today-button">今日へ戻る / Today</button>
+
+<div id="save-load-controls" style="max-width:720px;margin:0 auto 20px auto;text-align:center;">
+  <button id="save-json-btn">予定を保存 / Save</button>
+  <input type="file" id="load-json-input" style="display:none" accept=".json" />
+  <button id="load-json-btn">予定を読み込む / Load</button>
+</div>
+
+<!-- モーダル -->
+<div id="modal-bg" class="modal-bg" role="dialog" aria-modal="true" tabindex="-1">
+  <div id="modal">
+    <h2 id="modal-date">日付</h2>
+
+    <div id="event-list"></div>
+
+    <hr />
+
+    <h3>新しい予定を追加</h3>
+    <label for="new-event-start">開始時間 / Start</label>
+    <input type="time" id="new-event-start" />
+    <label for="new-event-end">終了時間 / End</label>
+    <input type="time" id="new-event-end" />
+    <label for="new-event-text">予定とタグ（複数行可）</label>
+    <textarea id="new-event-text" placeholder="例: 会議 #仕事"></textarea>
+    <div style="text-align: right; margin-top: 6px;">
+      <button id="add-event-btn">追加 / Add</button>
+    </div>
+
+    <div class="modal-buttons" style="margin-top: 15px; text-align: right;">
+      <button id="close-btn">閉じる / Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
+<div id="settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" tabindex="-1">
+  <div id="settings-modal">
+    <h2>タグ設定 / Tag Settings</h2>
+    <form id="settings-form">
+      <fieldset>
+        <legend>タグと色 / Tag Colors</legend>
+        <div id="tag-color-list"></div>
+        <div id="tag-add-row" style="display:flex; gap:8px; align-items:center; margin-top:10px;">
+          <input type="text" id="new-tag-name" placeholder="新しいタグ名" />
+          <input type="color" id="new-tag-color" value="#4a7c59" />
+          <button id="add-tag-btn" type="button">追加 / Add</button>
+        </div>
+      </fieldset>
+      <div class="modal-buttons" style="margin-top:10px;">
+        <button type="submit">保存</button>
+        <button type="button" id="settings-cancel-btn">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
