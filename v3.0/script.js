@@ -1,7 +1,7 @@
 "use strict";
 
 // --- バージョン管理 ---
-const SUPPORTED_VERSIONS = ["2.0", "3.0"];
+const SUPPORTED_VERSIONS = ["1.0", "2.0", "3.0"];
 const CURRENT_SAVE_VERSION = "3.0";
 
 // --- HTML要素取得 ---
@@ -59,13 +59,64 @@ function loadFromLocalStorage() {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      if (parsed.version && SUPPORTED_VERSIONS.includes(parsed.version)) {
-        calendarData = parsed;
-      }
+      calendarData = convertDataToV3(parsed);
     } catch (e) {
       console.warn("ローカルデータの読み込みに失敗しました", e);
     }
   }
+}
+
+// --- v1.0形式→v3.0形式変換関数 ---
+function convertV1toV3(data) {
+  // v1.0判定：version無し or "1.0"でeventsが文字列形式マップ
+  if ((!data.version || data.version === "1.0") && data.events && typeof data.events === "object") {
+    const convertedEvents = {};
+    for (const dateKey in data.events) {
+      const val = data.events[dateKey];
+      if (typeof val === "string") {
+        // 時刻抽出（HH:MM～HH:MM または HH:MM ）
+        const timeMatches = val.match(/(\d{1,2}:\d{2})(?:～(\d{1,2}:\d{2}))?/);
+        const start = timeMatches ? timeMatches[1] : "";
+        const end = timeMatches && timeMatches[2] ? timeMatches[2] : "";
+
+        // テキストは時刻とタグを除去
+        let text = val.replace(/(\d{1,2}:\d{2})(～(\d{1,2}:\d{2}))?/, "").replace(/#\S+/g, "").trim();
+
+        // タグはそのまま残す
+        const tags = val.match(/#\S+/g) || [];
+        text += tags.length ? " " + tags.join(" ") : "";
+
+        if (!convertedEvents[dateKey]) convertedEvents[dateKey] = [];
+        convertedEvents[dateKey].push({ start, end, text: text.trim() });
+      } else if (Array.isArray(val)) {
+        // もしすでに配列ならそのまま代入（v2,v3用）
+        convertedEvents[dateKey] = val;
+      }
+    }
+    return {
+      version: "3.0",
+      events: convertedEvents,
+      tagColors: data.tagColors || {},
+    };
+  }
+  return data;
+}
+
+// --- どのバージョンでもv3形式に変換 ---
+function convertDataToV3(data) {
+  if (!data) return data;
+  if (data.version === "3.0") return data;
+  if (data.version === "2.0") {
+    // v2.0はすでにeventsが配列形式なのでv3とほぼ同じ
+    // タグはハッシュ付きかもなのでそのまま
+    return {
+      version: "3.0",
+      events: data.events || {},
+      tagColors: data.tagColors || {},
+    };
+  }
+  // v1.0やversionなしをv3に変換
+  return convertV1toV3(data);
 }
 
 // --- 日付フォーマット ---
@@ -129,7 +180,7 @@ function drawCalendar(date) {
       evList.forEach(ev => {
         const evDiv = document.createElement("span");
         evDiv.className = "event";
-        const timeText = ev.start && ev.end ? `${ev.start}〜${ev.end} ` : "";
+        const timeText = ev.start && ev.end ? `${ev.start}〜${ev.end} ` : ev.start ? `${ev.start} ` : "";
         const textWithoutTags = ev.text.replace(/#\S+/g, "").trim();
         const tags = ev.text.match(/#\S+/g) || [];
         evDiv.textContent = timeText + textWithoutTags;
@@ -187,7 +238,7 @@ function updateEventList() {
   list.forEach((ev, i) => {
     const div = document.createElement("div");
     div.className = "event";
-    const timeText = ev.start && ev.end ? `${ev.start}〜${ev.end} ` : "";
+    const timeText = ev.start && ev.end ? `${ev.start}〜${ev.end} ` : ev.start ? `${ev.start} ` : "";
     const textWithoutTags = ev.text.replace(/#\S+/g, "").trim();
     const tags = ev.text.match(/#\S+/g) || [];
 
@@ -334,7 +385,8 @@ loadJsonInput.addEventListener("change", e => {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
-      const json = JSON.parse(ev.target.result);
+      let json = JSON.parse(ev.target.result);
+      json = convertDataToV3(json);
       if (json.version && SUPPORTED_VERSIONS.includes(json.version)) {
         calendarData = json;
         drawCalendar(currentDate);
@@ -351,7 +403,7 @@ loadJsonInput.addEventListener("change", e => {
   e.target.value = "";
 });
 
-// --- 月移動・今日ボタンのイベント追加 ---
+// --- 月移動ボタン ---
 prevMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
   drawCalendar(currentDate);
