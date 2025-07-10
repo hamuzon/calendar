@@ -134,17 +134,6 @@
       user-select: text;
       word-break: break-word;
     }
-    pre {
-      background: rgba(255,255,255,0.05);
-      padding: 1em;
-      border-radius: 6px;
-      overflow-x: auto;
-      font-family: monospace;
-      font-size: 0.95rem;
-      color: var(--text);
-      margin-top: 0.5em;
-      user-select: text;
-    }
     .notice {
       margin-top: clamp(1rem, 3vw, 1.5rem);
       padding: 1rem;
@@ -183,16 +172,13 @@
         <h2>JSONファイル名の命名規則の違い</h2>
         <h3>v1.0 のファイル名</h3>
         <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
-        <p><code>例: calendar_events_20250709_150230.json</code></p>
+        <p><code>例: calendar_events_20250710_183015.json</code></p>
         <h3>v2.0 のファイル名</h3>
         <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-        <p><code>例: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
+        <p><code>例: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
         <h3>v3.0 のファイル名</h3>
         <p><code>Calendar-3.0_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p><code>例: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
-        <p>v3.0 は v2.0 の命名規則を踏襲し、以下のコードでファイル名を生成します。</p>
-        <pre><code>return `Calendar-${CURRENT_SAVE_VERSION}_${y}_${m}_${d}_${h}_${min}_${s}.json`;</code></pre>
-        <p>また、v3.0 は v2.0 のコードを読み込むことができ、互換性があります。</p>
         <p>v1.0 と v2.0（v3.0）はファイル名やJSON内容が異なり互換性はありません。各バージョンに合わせて操作してください。</p>
         <div class="notice" role="alert">
           ⚠️ 注意: v1.0 と v2.0（v3.0）を同時に使用すると、片方のカレンダー表示が崩れることがあります。<br>
@@ -214,16 +200,13 @@
         <h2>Differences in JSON Filename Format</h2>
         <h3>v1.0 format</h3>
         <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
-        <p><code>Example: calendar_events_20250709_150230.json</code></p>
+        <p><code>Example: calendar_events_20250710_183015.json</code></p>
         <h3>v2.0 format</h3>
         <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-        <p><code>Example: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
+        <p><code>Example: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
         <h3>v3.0 format</h3>
         <p><code>Calendar-3.0_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p><code>Example: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
-        <p>v3.0 inherits the naming format from v2.0 and generates filenames with the following code:</p>
-        <pre><code>return `Calendar-${CURRENT_SAVE_VERSION}_${y}_${m}_${d}_${h}_${min}_${s}.json`;</code></pre>
-        <p>Also, v3.0 can load the v2.0 code and is compatible with it.</p>
         <p>The filenames and JSON content differ between v1.0 and v2.0 (v3.0), so they are not compatible.<br>Please use each version separately.</p>
         <div class="notice" role="alert">
           ⚠️ Note: Using v1.0 and v2.0 (v3.0) simultaneously may cause display issues.<br>
