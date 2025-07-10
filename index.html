@@ -4,161 +4,136 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calendar Version Selector</title>
+  <meta name="description" content="Calendarのバージョン選択機能ページ。v1.0とv2.0の違いを説明し、JSONファイルの命名規則や注意事項を紹介します。日本語と英語で案内。"/>
+  <meta name="keywords" content="Calendar, カレンダー, バージョン選択, version selector, バージョン違い, JSONファイル, 命名規則, 予定管理, version differences, calendar versions, version selection" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #121212;
       --text: #f0e6d2;
-      --border: #5a4d3a;
-      --device-bg: #1e1a14;
-      --status-bg: #2c261e;
-      --status-text: #c6b69f;
-      --input-bg: #332e24;
       --button-bg: #4b4130;
       --button-hover: #6a5f48;
       --notice: #d38c4a;
     }
-
     @media (prefers-color-scheme: light) {
       :root {
         --bg: #f7f3e9;
         --text: #3b2f2f;
-        --border: #b7a98c;
-        --device-bg: #fffdf7;
-        --status-bg: #f2e8d5;
-        --status-text: #5c4b3b;
-        --input-bg: #fffaf3;
         --button-bg: #d8c6a1;
         --button-hover: #c5b38f;
         --notice: #c46c00;
       }
     }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
       font-family: "Noto Sans JP", sans-serif;
       background: var(--bg);
       color: var(--text);
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
       min-height: 100vh;
-      text-align: center;
       padding: 2rem;
-      background-image: radial-gradient(circle at center, rgba(255 255 255 / 0.05), transparent 70%);
+      background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 70%);
+      text-align: center;
     }
-
     h1 {
-      font-size: 4.2rem;
-      margin-bottom: 0.5em;
-      letter-spacing: 0.1em;
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
     }
-
     p {
-      font-size: 1.2rem;
-      margin: 0.4em 0;
-      opacity: 0.9;
+      font-size: 1.1rem;
+      margin: 0.5em 0;
     }
-
     .version-links {
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      margin-top: 2rem;
+      margin-top: 1.5rem;
       width: 100%;
       max-width: 320px;
     }
-
     a.version-btn {
-      padding: 0.75em 2em;
-      background-color: var(--button-bg);
+      display: block;
+      background: var(--button-bg);
       color: var(--text);
       text-decoration: none;
-      border-radius: 12px;
+      padding: 0.75em;
+      border-radius: 10px;
+      font-size: 1.2rem;
       font-weight: bold;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-      transition: 0.3s ease;
-      display: block;
-      font-size: 1.3rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      transition: background 0.3s ease;
     }
-
-    a.version-btn:hover,
-    a.version-btn:focus {
-      background-color: var(--button-hover);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.8);
-      outline: none;
+    a.version-btn:hover {
+      background: var(--button-hover);
     }
-
     section {
-      max-width: 600px;
+      max-width: 700px;
       margin-top: 3rem;
       text-align: left;
     }
-
     h2 {
       color: var(--button-hover);
-      margin-bottom: 0.6em;
+      margin-bottom: 0.5rem;
     }
-
     h3 {
-      margin-top: 1em;
-      margin-bottom: 0.4em;
+      margin-top: 1.2rem;
+      margin-bottom: 0.4rem;
     }
-
     code {
       background: rgba(255, 255, 255, 0.1);
-      padding: 0.2em 0.5em;
-      border-radius: 5px;
-      font-family: "Courier New", monospace;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-family: monospace;
       font-size: 0.95rem;
     }
-
     .notice {
-      background-color: rgba(255, 165, 0, 0.1);
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(255, 165, 0, 0.1);
+      border-left: 5px solid var(--notice);
+      border-radius: 6px;
       color: var(--notice);
       font-weight: bold;
-      padding: 1em;
-      border-left: 6px solid var(--notice);
-      border-radius: 8px;
-      margin-top: 2em;
-      font-size: 1.05rem;
-      line-height: 1.5;
     }
-
     .lang-switch {
-      position: absolute;
+      position: fixed;
       top: 1rem;
       right: 1rem;
       background: var(--button-bg);
       color: var(--text);
       border: none;
       padding: 0.5em 1em;
-      border-radius: 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
       cursor: pointer;
-      font-size: 0.95rem;
+      z-index: 100;
     }
-
     @media (max-width: 600px) {
       h1 {
-        font-size: 2.8rem;
+        font-size: 2.2rem;
       }
-      p {
+      p, a.version-btn {
         font-size: 1rem;
+      }
+      section {
+        font-size: 0.95rem;
       }
     }
   </style>
-  <link rel="icon" href="icon-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
-  <link rel="icon" href="icon-dark.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
 </head>
 <body>
   <button class="lang-switch" onclick="toggleLang()">🌐 English</button>
 
+  <!-- Japanese -->
   <div id="lang-ja">
     <h1>📅 カレンダー選択 📅</h1>
     <p>以下のバージョンから選んでください。</p>
@@ -176,31 +151,32 @@
       <p><code>例: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
       <p>v1.0 と v2.0 はファイル名とJSON内容が異なり互換性はありません。<br>各バージョンに合わせて操作してください。</p>
       <div class="notice">
-        ⚠️ <strong>注意:</strong> v1.0とv2.0の両方の予定ファイルを同時に公開すると、表示が崩れる可能性があります。<br />
-        ただし、どちらか一方のみを設置している場合は、問題が起きない場合もあります。
+        ⚠️ 注意: v1.0とv2.0を同時に使用すると、片方のカレンダー表示が崩れることがあります。<br>
+        片方のみの利用を推奨します。
       </div>
     </section>
   </div>
 
-  <div id="lang-en" style="display: none;">
-    <h1>📅 Select Calendar Version 📅</h1>
+  <!-- English -->
+  <div id="lang-en" style="display:none;">
+    <h1>Select Calendar Version</h1>
     <p>Please choose one of the versions below.</p>
     <div class="version-links">
       <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
       <a class="version-btn" href="v2.0/index.html">📆 v2.0 🖋️</a>
     </div>
     <section>
-      <h2>JSON Filename Format Differences</h2>
-      <h3>v1.0 Format</h3>
+      <h2>Differences in JSON Filename Format</h2>
+      <h3>v1.0 format</h3>
       <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
       <p><code>Example: calendar_events_20250709_150230.json</code></p>
-      <h3>v2.0 Format</h3>
+      <h3>v2.0 format</h3>
       <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
       <p><code>Example: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
-      <p>The JSON format and filenames are different between v1.0 and v2.0 and are not compatible.<br>Please operate within each version accordingly.</p>
+      <p>The filenames and JSON content differ between v1.0 and v2.0, and they are not compatible.<br>Please operate each version separately.</p>
       <div class="notice">
-        ⚠️ <strong>Note:</strong> If both v1.0 and v2.0 event files are published simultaneously, display issues may occur.<br />
-        However, using only one version at a time may avoid such issues.
+        ⚠️ Note: Using v1.0 and v2.0 simultaneously may cause display issues in one of the calendars.<br>
+        We recommend using only one version at a time.
       </div>
     </section>
   </div>
@@ -211,7 +187,6 @@
       const ja = document.getElementById("lang-ja");
       const en = document.getElementById("lang-en");
       const btn = document.querySelector(".lang-switch");
-
       if (currentLang === "ja") {
         ja.style.display = "none";
         en.style.display = "block";
