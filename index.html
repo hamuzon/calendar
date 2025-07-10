@@ -24,14 +24,12 @@
         --notice: #c46c00;
       }
     }
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
     html, body {
+      margin: 0; padding: 0;
       height: 100%;
-      width: 100%;
       font-family: "Noto Sans JP", sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -40,57 +38,57 @@
       align-items: center;
       text-align: center;
       padding: 1rem;
-      background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 70%);
+      background-image: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 70%);
     }
     #container {
-      width: 100%;
+      width: 90vw;
       max-width: 700px;
       min-width: 280px;
       padding: 1.5rem 2rem;
-      box-sizing: border-box;
+      background: transparent;
     }
     h1 {
-      font-size: clamp(1.8rem, 5vw, 3.5rem);
+      font-size: clamp(1.8rem, 6vw, 3.5rem);
       margin-bottom: 1rem;
       letter-spacing: 0.05em;
     }
     p {
-      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
       margin: 0.5em 0;
       line-height: 1.4;
     }
     .version-links {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      margin-top: 1.5rem;
+      gap: clamp(0.5rem, 2vw, 1rem);
+      margin-top: clamp(1rem, 3vw, 1.5rem);
       width: 100%;
-      padding: 0 1rem;
       max-width: 320px;
       margin-left: auto;
       margin-right: auto;
+      padding: 0 0.5rem;
     }
     a.version-btn {
-      display: block;
       background: var(--button-bg);
       color: var(--text);
       text-decoration: none;
       padding: clamp(0.5em, 1.5vw, 0.75em);
       border-radius: 10px;
-      font-size: clamp(1rem, 2.5vw, 1.2rem);
-      font-weight: bold;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      transition: background 0.3s ease;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-weight: 700;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      transition: background-color 0.3s ease;
       user-select: none;
+      display: block;
     }
     a.version-btn:hover,
     a.version-btn:focus {
       background: var(--button-hover);
       outline: none;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.7);
     }
     section {
-      margin-top: 3rem;
+      margin-top: clamp(2rem, 6vw, 3rem);
       text-align: left;
       padding: 0 1rem;
     }
@@ -105,7 +103,7 @@
       font-size: clamp(1rem, 3vw, 1.3rem);
     }
     code {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.1);
       padding: 0.2em 0.4em;
       border-radius: 4px;
       font-family: monospace;
@@ -114,15 +112,15 @@
       white-space: nowrap;
     }
     .notice {
-      margin-top: 1.5rem;
+      margin-top: clamp(1rem, 4vw, 1.5rem);
       padding: 1rem;
-      background: rgba(255, 165, 0, 0.1);
+      background: rgba(255,165,0,0.1);
       border-left: 5px solid var(--notice);
       border-radius: 6px;
       color: var(--notice);
-      font-weight: bold;
+      font-weight: 700;
       line-height: 1.4;
-      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
     }
     .lang-switch {
       position: fixed;
