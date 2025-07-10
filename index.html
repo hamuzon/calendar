@@ -49,7 +49,6 @@
       background: transparent;
     }
 
-    /* 言語切替ボタン */
     .lang-switch {
       background: var(--button-bg);
       color: var(--text);
@@ -100,9 +99,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.5);
       transition: background-color 0.3s ease;
       user-select: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: block;
     }
     a.version-btn:hover,
     a.version-btn:focus {
@@ -110,16 +107,6 @@
       outline: 3px solid var(--focus-outline);
       outline-offset: 2px;
       box-shadow: 0 6px 12px rgba(0,0,0,0.7);
-    }
-    .version-emoji-left {
-      margin-right: 0.5em;
-      font-size: 1.3em;
-      user-select: none;
-    }
-    .version-emoji-right {
-      margin-left: 0.5em;
-      font-size: 1.3em;
-      user-select: none;
     }
 
     section {
@@ -176,15 +163,9 @@
       <h1>📅 カレンダー選択 📅</h1>
       <p>以下のバージョンから選んでください。</p>
       <div class="version-links">
-        <a class="version-btn" href="v1.0/index.html">
-          <span class="version-emoji-left">🗓️</span> v1.0 <span class="version-emoji-right">📝</span>
-        </a>
-        <a class="version-btn" href="v2.0/index.html">
-          <span class="version-emoji-left">📅</span> v2.0 <span class="version-emoji-right">🖊️</span>
-        </a>
-        <a class="version-btn" href="v3.0/index.html">
-          <span class="version-emoji-left">📆</span> v3.0 <span class="version-emoji-right">✏️</span>
-        </a>
+        <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
+        <a class="version-btn" href="v2.0/index.html">📆 v2.0 🕰️</a>
+        <a class="version-btn" href="v3.0/index.html">📇 v3.0 ✏️</a>
       </div>
       <section>
         <h2>JSONファイル名の命名規則の違い</h2>
@@ -197,10 +178,10 @@
         <h3>v3.0 のファイル名</h3>
         <p><code>Calendar-3.0_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p><code>例: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
-        <p>v1.0 と v2.0（v3.0）はファイル名やJSON内容が異なり互換性はありません。各バージョンに合わせて操作してください。</p>
+        <p>v1.0 と v2.0（v3.0）はファイル名やJSON内容が異なります。<br>ただし、v3.0 は v2.0 のJSON形式と互換性があります。</p>
         <div class="notice" role="alert">
-          ⚠️ 注意: v1.0 と v2.0 と v3.0 を同時に使用すると、片方のカレンダー表示が崩れることがあります。<br>
-          片方のみの利用を推奨します。
+          ⚠️ 注意: v1.0 と v2.0 と v3.0 を同時に使用すると、別のバージョンのカレンダー表示が崩れることがあります。<br>
+          一度に1つのバージョンのみの利用を推奨します。
         </div>
       </section>
     </div>
@@ -210,15 +191,9 @@
       <h1>Select Calendar Version</h1>
       <p>Please choose one of the versions below.</p>
       <div class="version-links">
-        <a class="version-btn" href="v1.0/index.html">
-          <span class="version-emoji-left">🗓️</span> v1.0 <span class="version-emoji-right">📝</span>
-        </a>
-        <a class="version-btn" href="v2.0/index.html">
-          <span class="version-emoji-left">📅</span> v2.0 <span class="version-emoji-right">🖊️</span>
-        </a>
-        <a class="version-btn" href="v3.0/index.html">
-          <span class="version-emoji-left">📆</span> v3.0 <span class="version-emoji-right">✏️</span>
-        </a>
+        <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
+        <a class="version-btn" href="v2.0/index.html">📆 v2.0 🕰️</a>
+        <a class="version-btn" href="v3.0/index.html">📇 v3.0 ✏️</a>
       </div>
       <section>
         <h2>Differences in JSON Filename Format</h2>
@@ -229,11 +204,11 @@
         <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p><code>Example: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
         <h3>v3.0 format</h3>
-        <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
+        <p><code>Calendar-3.0_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p><code>Example: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
-        <p>The filenames and JSON content differ between v1.0 and v2.0 (v3.0), so they are not compatible.<br>Please use each version separately.</p>
+        <p>The filenames and JSON contents differ between v1.0 and v2.0/v3.0.<br>However, v3.0 is backward compatible with the JSON format of v2.0.</p>
         <div class="notice" role="alert">
-          ⚠️ Note: Using v1.0 and v2.0 and v3.0 simultaneously may cause display issues.<br>
+          ⚠️ Note: Using v1.0, v2.0, and v3.0 simultaneously may cause display issues in another version of the calendar.<br>
           We recommend using only one version at a time.
         </div>
       </section>
@@ -241,10 +216,7 @@
   </div>
 
   <script>
-    // 初期言語設定
     let currentLang = 'ja';
-
-    // ページロード時にlocalStorageから言語を復元
     document.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('calendarLang');
       if (saved && saved !== currentLang) {
