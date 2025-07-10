@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>📅 カレンダー バージョン選択 📅</title>
+  <title>Calendar Version Selector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #121212;
@@ -15,6 +16,7 @@
       --input-bg: #332e24;
       --button-bg: #4b4130;
       --button-hover: #6a5f48;
+      --notice: #d38c4a;
     }
 
     @media (prefers-color-scheme: light) {
@@ -28,6 +30,7 @@
         --input-bg: #fffaf3;
         --button-bg: #d8c6a1;
         --button-hover: #c5b38f;
+        --notice: #c46c00;
       }
     }
 
@@ -38,7 +41,7 @@
     }
 
     body {
-      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-family: "Noto Sans JP", sans-serif;
       background: var(--bg);
       color: var(--text);
       display: flex;
@@ -52,17 +55,15 @@
     }
 
     h1 {
-      font-size: 4.5rem;
+      font-size: 4.2rem;
       margin-bottom: 0.5em;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
     }
 
     p {
       font-size: 1.2rem;
-      margin: 0.3em 0;
-      color: var(--text);
+      margin: 0.4em 0;
       opacity: 0.9;
-      line-height: 1.4;
     }
 
     .version-links {
@@ -82,7 +83,7 @@
       border-radius: 12px;
       font-weight: bold;
       box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      transition: 0.3s ease;
       display: block;
       font-size: 1.3rem;
     }
@@ -95,10 +96,9 @@
     }
 
     section {
-      max-width: 500px;
+      max-width: 600px;
       margin-top: 3rem;
       text-align: left;
-      color: var(--text);
     }
 
     h2 {
@@ -112,23 +112,44 @@
     }
 
     code {
-      background: rgba(255 255 255 / 0.1);
-      padding: 0.15em 0.4em;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.2em 0.5em;
       border-radius: 5px;
-      font-family: "Courier New", Courier, monospace;
+      font-family: "Courier New", monospace;
       font-size: 0.95rem;
-      user-select: text;
+    }
+
+    .notice {
+      background-color: rgba(255, 165, 0, 0.1);
+      color: var(--notice);
+      font-weight: bold;
+      padding: 1em;
+      border-left: 6px solid var(--notice);
+      border-radius: 8px;
+      margin-top: 2em;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .lang-switch {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--button-bg);
+      color: var(--text);
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
     }
 
     @media (max-width: 600px) {
       h1 {
-        font-size: 3.2rem;
+        font-size: 2.8rem;
       }
       p {
         font-size: 1rem;
-      }
-      .version-links {
-        max-width: 100%;
       }
     }
   </style>
@@ -136,21 +157,73 @@
   <link rel="icon" href="icon-dark.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
 </head>
 <body>
-  <h1>📅 カレンダー選択 📅</h1>
-  <p>以下のバージョンから選んでください。</p>
-  <div class="version-links">
-    <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
-    <a class="version-btn" href="v2.0/index.html">📆 v2.0 🖋️</a>
+  <button class="lang-switch" onclick="toggleLang()">🌐 English</button>
+
+  <div id="lang-ja">
+    <h1>📅 カレンダー選択 📅</h1>
+    <p>以下のバージョンから選んでください。</p>
+    <div class="version-links">
+      <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
+      <a class="version-btn" href="v2.0/index.html">📆 v2.0 🖋️</a>
+    </div>
+    <section>
+      <h2>JSONファイル名の命名規則の違い</h2>
+      <h3>v1.0 のファイル名</h3>
+      <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
+      <p><code>例: calendar_events_20250709_150230.json</code></p>
+      <h3>v2.0 のファイル名</h3>
+      <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
+      <p><code>例: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
+      <p>v1.0 と v2.0 はファイル名とJSON内容が異なり互換性はありません。<br>各バージョンに合わせて操作してください。</p>
+      <div class="notice">
+        ⚠️ <strong>注意:</strong> v1.0とv2.0の両方の予定ファイルを同時に公開すると、表示が崩れる可能性があります。<br />
+        ただし、どちらか一方のみを設置している場合は、問題が起きない場合もあります。
+      </div>
+    </section>
   </div>
-  <section>
-    <h2>JSONファイル名の命名規則の違い</h2>
-    <h3>v1.0 のファイル名</h3>
-    <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
-    <p><code>例: calendar_events_20250709_150230.json</code></p>
-    <h3>v2.0 のファイル名</h3>
-    <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-    <p><code>例: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
-    <p>v1.0 と v2.0 はファイル名とJSON内容が異なり互換性はありません。<br>各バージョンに合わせて操作してください。</p>
-  </section>
+
+  <div id="lang-en" style="display: none;">
+    <h1>📅 Select Calendar Version 📅</h1>
+    <p>Please choose one of the versions below.</p>
+    <div class="version-links">
+      <a class="version-btn" href="v1.0/index.html">🗓️ v1.0 🧾</a>
+      <a class="version-btn" href="v2.0/index.html">📆 v2.0 🖋️</a>
+    </div>
+    <section>
+      <h2>JSON Filename Format Differences</h2>
+      <h3>v1.0 Format</h3>
+      <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
+      <p><code>Example: calendar_events_20250709_150230.json</code></p>
+      <h3>v2.0 Format</h3>
+      <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
+      <p><code>Example: Calendar-2.0_2025_07_09_15_02_30.json</code></p>
+      <p>The JSON format and filenames are different between v1.0 and v2.0 and are not compatible.<br>Please operate within each version accordingly.</p>
+      <div class="notice">
+        ⚠️ <strong>Note:</strong> If both v1.0 and v2.0 event files are published simultaneously, display issues may occur.<br />
+        However, using only one version at a time may avoid such issues.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let currentLang = "ja";
+    function toggleLang() {
+      const ja = document.getElementById("lang-ja");
+      const en = document.getElementById("lang-en");
+      const btn = document.querySelector(".lang-switch");
+
+      if (currentLang === "ja") {
+        ja.style.display = "none";
+        en.style.display = "block";
+        btn.textContent = "🌐 日本語";
+        currentLang = "en";
+      } else {
+        ja.style.display = "block";
+        en.style.display = "none";
+        btn.textContent = "🌐 English";
+        currentLang = "ja";
+      }
+    }
+  </script>
 </body>
 </html>
