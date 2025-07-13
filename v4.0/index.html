@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calendar v4.0</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="icon.svg" />
+</head>
+<body>
+<header>
+  <h1>📅 Calendar app 🗓️</h1>
+
+  <div class="nav-buttons">
+    <div class="nav-group main-nav">
+      <button id="prev-month">◀ 前月</button> 
+      <span id="month-year"></span> 
+      <button id="next-month">翌月 ▶</button>
+    </div>
+    <div class="nav-group extra-nav">
+      <button id="today-button">今日</button> 
+      <button id="settings-btn">設定 ⚙️</button> 
+      <button id="save-json-btn">保存 💾</button> 
+      <button id="load-json-btn">読み込み 📂</button> 
+      <input type="file" id="load-json-input" accept="application/json" style="display:none;" />
+    </div>
+  </div>
+</header>
+
+<!-- カレンダー本体 横スクロール対応 -->
+<div id="calendar-container">
+  <table id="calendar" aria-label="カレンダー">
+    <thead>
+      <tr>
+        <th class="sunday">日</th>
+        <th>月</th>
+        <th>火</th>
+        <th>水</th>
+        <th>木</th>
+        <th>金</th>
+        <th class="saturday">土</th>
+      </tr>
+    </thead>
+    <tbody id="calendar-body"></tbody>
+  </table>
+</div>
+
+<!-- 予定追加・編集モーダル -->
+<div id="modal-bg" class="modal-bg" style="display:none;">
+  <div class="modal">
+    <h2 id="modal-date">日付</h2>
+    <div id="event-list" class="event-list"></div>
+    <div class="event-inputs">
+      <label>開始時刻：<input type="time" id="new-event-start" /></label>
+      <label>終了時刻：<input type="time" id="new-event-end" /></label>
+      <label>内容：<input type="text" id="new-event-text" placeholder="予定内容" /></label>
+      <label>タグ：<input type="text" id="new-event-tags" placeholder="#タグはスペースかカンマ区切り" /></label>
+      <label>場所：<input type="text" id="new-event-location" placeholder="場所" /></label>
+      <label class="notify-label"><input type="checkbox" id="new-event-notify" /> 通知</label>
+    </div>
+    <div class="modal-buttons">
+      <button id="add-event-btn">追加 / Add</button>
+      <button id="close-btn">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- タグカラー設定モーダル -->
+<div id="settings-modal-bg" class="modal-bg" style="display:none;">
+  <div class="modal">
+    <h2>タグカラー設定</h2>
+    <div id="tag-color-list" class="tag-color-list"></div>
+    <div class="tag-add">
+      <input type="text" id="new-tag-name" placeholder="#タグ名" />
+      <input type="color" id="new-tag-color" value="#4a7c59" />
+      <button id="add-tag-btn">追加</button>
+    </div>
+    <button id="settings-cancel-btn">閉じる</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
