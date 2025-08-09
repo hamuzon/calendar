@@ -27,7 +27,7 @@
   </div>
 </header>
 
-<!-- カレンダー本体 横スクロール対応 -->
+<!-- カレンダー本体 -->
 <div id="calendar-container">
   <table id="calendar" aria-label="カレンダー">
     <thead>
@@ -47,7 +47,7 @@
 
 <!-- 予定追加・編集モーダル -->
 <div id="modal-bg" class="modal-bg" style="display:none;">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-date">
     <h2 id="modal-date">日付</h2>
     <div id="event-list" class="event-list"></div>
     <div class="event-inputs">
@@ -67,8 +67,8 @@
 
 <!-- タグカラー設定モーダル -->
 <div id="settings-modal-bg" class="modal-bg" style="display:none;">
-  <div class="modal">
-    <h2>タグカラー設定</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <h2 id="settings-title">タグカラー設定</h2>
     <div id="tag-color-list" class="tag-color-list"></div>
     <div class="tag-add">
       <input type="text" id="new-tag-name" placeholder="#タグ名" />
