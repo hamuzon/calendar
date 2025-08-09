@@ -79,13 +79,83 @@ function loadFromLocalStorage() {
   }
 }
 
-// --- バージョン変換（省略版: 必要に応じて展開） ---
+// --- バージョン変換 ---
 function convertDataToV4(data) {
-  if (!data) return calendarData;
-  const v = data.version || "1.0";
-  if (v === "4.0") return data;
-  // 実装は省略。上記コードと同じ変換処理を入れてください。
-  return data; // とりあえず
+  if (!data) return data;
+  const originalVersion = data.version || "1.0";
+
+  if (originalVersion === "4.0") return data;
+  if (originalVersion === "3.0") return convertV3toV4(data);
+  if (originalVersion === "2.0") return convertV2toV4(data);
+  return convertV1toV4(data);
+}
+
+function convertV1toV4(data) {
+  const convertedEvents = {};
+  for (const dateKey in data.events) {
+    const val = data.events[dateKey];
+    if (typeof val === "string") {
+      const timeMatches = val.match(/(\d{1,2}:\d{2})(?:～(\d{1,2}:\d{2}))?/);
+      const start = timeMatches ? timeMatches[1] : "";
+      const end = timeMatches && timeMatches[2] ? timeMatches[2] : "";
+      let text = val.replace(/(\d{1,2}:\d{2})(～(\d{1,2}:\d{2}))?/, "").replace(/#\S+/g, "").trim();
+      const tags = val.match(/#\S+/g) || [];
+      if (!convertedEvents[dateKey]) convertedEvents[dateKey] = [];
+      convertedEvents[dateKey].push({ start, end, text, location: "", notify: false, tags });
+    } else if (Array.isArray(val)) {
+      convertedEvents[dateKey] = val.map(ev => ({
+        start: ev.start || "",
+        end: ev.end || "",
+        text: ev.text || "",
+        location: ev.location || "",
+        notify: ev.notify || false,
+        tags: ev.tags || []
+      }));
+    }
+  }
+  return {
+    version: "4.0",
+    events: convertedEvents,
+    tagColors: data.settings?.tagColors || {}
+  };
+}
+
+function convertV2toV4(data) {
+  const convertedEvents = {};
+  for (const dateKey in data.events) {
+    convertedEvents[dateKey] = data.events[dateKey].map(ev => ({
+      start: ev.start || "",
+      end: ev.end || "",
+      text: ev.text || "",
+      location: ev.location || "",
+      notify: ev.notify || false,
+      tags: ev.tags || []
+    }));
+  }
+  return {
+    version: "4.0",
+    events: convertedEvents,
+    tagColors: data.tagColors || {}
+  };
+}
+
+function convertV3toV4(data) {
+  const convertedEvents = {};
+  for (const dateKey in data.events) {
+    convertedEvents[dateKey] = data.events[dateKey].map(ev => ({
+      start: ev.start || "",
+      end: ev.end || "",
+      text: ev.text || "",
+      location: ev.location || "",
+      notify: ev.notify || false,
+      tags: ev.tags || []
+    }));
+  }
+  return {
+    version: "4.0",
+    events: convertedEvents,
+    tagColors: data.tagColors || {}
+  };
 }
 
 // --- カレンダー描画 ---
@@ -437,45 +507,6 @@ todayBtn.addEventListener("click", () => {
   drawCalendar(currentDate);
 });
 
-// --- JSON保存 ---
-saveJsonBtn.addEventListener("click", () => {
-  const jsonStr = JSON.stringify(calendarData, null, 2);
-  const blob = new Blob([jsonStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const now = new Date();
-  const filename = `Calendar-${CURRENT_SAVE_VERSION}_${formatDate(now)}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.json`;
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// --- JSON読み込み ---
-loadJsonBtn.addEventListener("click", () => {
-  loadJsonInput.value = "";
-  loadJsonInput.click();
-});
-loadJsonInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      let data = JSON.parse(ev.target.result);
-      const originalVersion = data.version || "1.0";
-      data = convertDataToV4(data);
-      calendarData = data;
-      saveToLocalStorage();
-      drawCalendar(currentDate);
-      alert(`✅ データを読み込みました！\n旧バージョン: v${originalVersion} → 現行バージョン: v${CURRENT_SAVE_VERSION}`);
-    } catch {
-      alert("⚠️ ファイルの読み込みに失敗しました。");
-    }
-  };
-  reader.readAsText(file);
-});
-
 // --- ランダムカラー生成 ---
 function getRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -512,30 +543,41 @@ function sendNotification(title, body) {
   }
 }
 
-// 毎分イベントの通知チェックを行う関数
+// --- 通知チェック（1分毎） ---
 function checkNotifications() {
+  if (Notification.permission !== "granted") return;
   const now = new Date();
-  const nowDateStr = formatDate(now);
-  const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-  const eventsToday = calendarData.events[nowDateStr] || [];
-  eventsToday.forEach(ev => {
-    if (!ev.notify || !ev.start) return;
+  for (const dateStr in calendarData.events) {
+    const events = calendarData.events[dateStr];
+    events.forEach(ev => {
+      if (!ev.notify) return;
+      if (!ev.start) return;
 
-    // 通知対象の時刻が現在時刻と一致したら通知を送る
-    if (ev.start === nowTimeStr) {
-      sendNotification("予定の通知", `${ev.start}〜${ev.end} ${ev.text}`);
-    }
-  });
+      // 日付一致チェック
+      if (dateStr !== formatDate(now)) return;
+
+      // 時刻比較
+      const [h, m] = ev.start.split(":").map(x => parseInt(x, 10));
+      if (isNaN(h) || isNaN(m)) return;
+
+      if (now.getHours() === h && now.getMinutes() === m) {
+        const key = eventUniqueKey(dateStr, ev.start, ev.text);
+        if (!notifiedEvents.has(key)) {
+          sendNotification("予定の通知", `${ev.start} - ${ev.text}`);
+          notifiedEvents.add(key);
+        }
+      }
+    });
+  }
 }
 
-// 1秒ごとに通知チェック
-setInterval(checkNotifications, 1000);
-
-
-// ページ読み込み時に即チェック
-checkNotifications();
-
 // --- 初期処理 ---
-loadFromLocalStorage();
-drawCalendar(currentDate);
+function init() {
+  loadFromLocalStorage();
+  drawCalendar(currentDate);
+  requestNotificationPermission();
+  setInterval(checkNotifications, 60 * 1000); // 1分毎
+}
+
+init();
