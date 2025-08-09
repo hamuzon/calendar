@@ -17,6 +17,7 @@ const eventList = document.getElementById("event-list");
 const newEventStart = document.getElementById("new-event-start");
 const newEventEnd = document.getElementById("new-event-end");
 const newEventText = document.getElementById("new-event-text");
+const newEventTagsInput = document.getElementById("new-event-tags");
 const newEventLocation = document.getElementById("new-event-location");
 const newEventNotify = document.getElementById("new-event-notify");
 const addEventBtn = document.getElementById("add-event-btn");
@@ -266,6 +267,7 @@ function openModal(date) {
   newEventStart.value = "";
   newEventEnd.value = "";
   newEventText.value = "";
+  newEventTagsInput.value = "";
   newEventLocation.value = "";
   newEventNotify.checked = false;
   editingIndex = null;
@@ -329,6 +331,7 @@ function updateEventList() {
       newEventStart.value = ev.start || "";
       newEventEnd.value = ev.end || "";
       newEventText.value = ev.text;
+      newEventTagsInput.value = ev.tags ? ev.tags.join(" ") : "";
       newEventLocation.value = ev.location || "";
       newEventNotify.checked = !!ev.notify;
       editingIndex = i;
@@ -363,6 +366,7 @@ addEventBtn.addEventListener("click", () => {
   const start = newEventStart.value.trim();
   const end = newEventEnd.value.trim();
   const textRaw = newEventText.value.trim();
+  const tagsRaw = newEventTagsInput.value.trim();
   const location = newEventLocation.value.trim();
   const notify = newEventNotify.checked;
 
@@ -372,8 +376,16 @@ addEventBtn.addEventListener("click", () => {
     return;
   }
 
-  // タグ抽出 (#付きの単語)
-  const tags = (textRaw.match(/#\S+/g) || []).map(t => (t.startsWith("#") ? t : "#" + t));
+  // タグ入力欄があるので両方対応（textRaw内の#タグも含める）
+  const tagsFromText = (textRaw.match(/#\S+/g) || []);
+  const tagsFromInput = tagsRaw ? tagsRaw.split(/[\s,]+/).filter(t => t.length > 0) : [];
+  // #が無ければ付ける
+  const normalizedTags = new Set();
+  [...tagsFromText, ...tagsFromInput].forEach(t => {
+    if (t.startsWith("#")) normalizedTags.add(t);
+    else normalizedTags.add("#" + t);
+  });
+  const tags = Array.from(normalizedTags);
 
   // タグがある場合はtagColorsに登録（なければデフォルト色）
   tags.forEach(tag => {
@@ -405,6 +417,7 @@ addEventBtn.addEventListener("click", () => {
     newEventStart.value = "";
     newEventEnd.value = "";
     newEventText.value = "";
+    newEventTagsInput.value = "";
     newEventLocation.value = "";
     newEventNotify.checked = false;
     newEventText.focus();
@@ -472,79 +485,41 @@ addTagBtn.addEventListener("click", () => {
     newTagName.focus();
     return;
   }
+
   calendarData.tagColors[tagName] = newTagColor.value;
+  newTagName.value = "";
   saveToLocalStorage();
   renderTagColorList();
-  newTagName.value = "";
-  newTagColor.value = "#4a7c59";
-  newTagName.focus();
-});
-settingsCancelBtn.addEventListener("click", () => {
-  settingsModalBg.style.display = "none";
 });
 settingsBtn.addEventListener("click", () => {
   renderTagColorList();
   settingsModalBg.style.display = "flex";
 });
+settingsCancelBtn.addEventListener("click", () => {
+  settingsModalBg.style.display = "none";
+});
 settingsModalBg.addEventListener("click", e => {
-  if (e.target === settingsModalBg) {
-    settingsModalBg.style.display = "none";
-  }
+  if (e.target === settingsModalBg) settingsModalBg.style.display = "none";
 });
 
-// --- 月切替 ---
-prevMonthBtn.addEventListener("click", () => {
-  currentDate.setMonth(currentDate.getMonth() - 1);
-  drawCalendar(currentDate);
-});
-
-nextMonthBtn.addEventListener("click", () => {
-  currentDate.setMonth(currentDate.getMonth() + 1);
-  drawCalendar(currentDate);
-});
-
+// --- 今日ボタン ---
 todayBtn.addEventListener("click", () => {
   currentDate = new Date();
   currentDate.setHours(0, 0, 0, 0);
   drawCalendar(currentDate);
 });
 
-// --- JSON保存・読込み ---
-saveJsonBtn.addEventListener("click", () => {
-  const dataStr = JSON.stringify(calendarData, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Calendar-${CURRENT_SAVE_VERSION}_${formatDate(new Date())}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+// --- 月移動 ---
+prevMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() - 1);
+  drawCalendar(currentDate);
+});
+nextMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  drawCalendar(currentDate);
 });
 
-loadJsonBtn.addEventListener("click", () => {
-  loadJsonInput.click();
-});
-
-loadJsonInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      calendarData = convertDataToV4(data);
-      saveToLocalStorage();
-      drawCalendar(currentDate);
-      alert("カレンダーの読み込みに成功しました。");
-    } catch {
-      alert("ファイルの読み込みに失敗しました。正しい形式のJSONファイルを指定してください。");
-    }
-  };
-  reader.readAsText(file);
-  loadJsonInput.value = "";
-});
-
-// --- ランダムカラー生成 ---
+// --- ランダムカラー ---
 function getRandomColor() {
   const letters = "0123456789ABCDEF";
   let color = "#";
@@ -554,39 +529,69 @@ function getRandomColor() {
   return color;
 }
 
+// --- JSON保存・読み込み ---
+saveJsonBtn.addEventListener("click", () => {
+  const dataStr = JSON.stringify(calendarData, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const now = new Date();
+  const fn = `Calendar-${CURRENT_SAVE_VERSION}_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.json`;
+  a.download = fn;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+loadJsonBtn.addEventListener("click", () => {
+  loadJsonInput.click();
+});
+loadJsonInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const json = JSON.parse(ev.target.result);
+      calendarData = convertDataToV4(json);
+      saveToLocalStorage();
+      drawCalendar(currentDate);
+      alert("予定を読み込みました。");
+    } catch {
+      alert("読み込みに失敗しました。JSON形式を確認してください。");
+    }
+  };
+  reader.readAsText(file);
+});
+
 // --- 通知機能 ---
-// 通知が許可されていなければ要求
+// Notification API対応チェック＆権限リクエスト
 if ("Notification" in window) {
   if (Notification.permission !== "granted" && Notification.permission !== "denied") {
     Notification.requestPermission();
   }
 }
 
-// 毎秒通知チェック
-setInterval(() => {
+// 1秒ごとに通知チェック
+function checkNotifications() {
   if (Notification.permission !== "granted") return;
 
   const now = new Date();
-  const nowTime = now.getHours() * 60 + now.getMinutes();
-
-  // 今日の日付文字列
   const todayStr = formatDate(now);
+  // 現在時刻をHH:mm:ss形式で取得
+  const nowStr = now.toTimeString().slice(0, 8);
 
-  const todayEvents = calendarData.events[todayStr] || [];
-  todayEvents.forEach(ev => {
+  const events = calendarData.events[todayStr] || [];
+
+  events.forEach(ev => {
     if (!ev.notify || !ev.start) return;
 
-    // 開始時間を分に変換
-    const [h, m] = ev.start.split(":").map(Number);
-    if (isNaN(h) || isNaN(m)) return;
+    // ev.startがHH:mmのみの場合は秒を補完
+    let evStart = ev.start.length === 5 ? ev.start + ":00" : ev.start;
 
-    const eventTime = h * 60 + m;
-
-    // 今の時間とイベント開始時間の差が0〜1分なら通知
-    if (nowTime >= eventTime && nowTime < eventTime + 1) {
+    if (nowStr === evStart) {
       const key = eventUniqueKey(todayStr, ev.start, ev.text);
       if (!notifiedEvents.has(key)) {
-        // 通知表示
         new Notification("予定の時間です！", {
           body: `${ev.start} - ${ev.text}`,
           icon: "/icon.svg"
@@ -596,19 +601,33 @@ setInterval(() => {
     }
   });
 
-  // 1分以上経過した通知はSetから削除（過去の通知クリア）
-  notifiedEvents.forEach(key => {
-    const parts = key.split("|");
-    if (parts.length < 2) return;
-    const timeParts = parts[1].split(":").map(Number);
-    if (timeParts.length < 2) return;
-    const eventTime = timeParts[0] * 60 + timeParts[1];
-    if (nowTime > eventTime + 1) {
+  // 通知済みイベントの期限切れ判定（1分経過で解除）
+  for (const key of notifiedEvents) {
+    // key = date|start|text で startはHH:mm or HH:mm:ss
+    const [dateStr, startTime] = key.split("|");
+    if (dateStr !== todayStr) {
+      notifiedEvents.delete(key);
+      continue;
+    }
+    const [h, m, s] = startTime.split(":").map(Number);
+    const eventDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+    if ((now - eventDateTime) > 60000) { // 60秒経過したら解除
       notifiedEvents.delete(key);
     }
-  });
-}, 1000);
+  }
+}
+
+// 秒にズレを合わせてsetInterval開始
+function startNotificationChecker() {
+  const now = new Date();
+  const delay = 1000 - now.getMilliseconds();
+  setTimeout(() => {
+    checkNotifications();
+    setInterval(checkNotifications, 1000);
+  }, delay);
+}
 
 // --- 初期化 ---
 loadFromLocalStorage();
 drawCalendar(currentDate);
+startNotificationChecker();
