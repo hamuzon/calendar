@@ -529,8 +529,9 @@ function checkNotifications() {
   });
 }
 
-// 1分ごとに通知チェック
-setInterval(checkNotifications, 60 * 1000);
+// 1秒ごとに通知チェック
+setInterval(checkNotifications, 1000);
+
 
 // ページ読み込み時に即チェック
 checkNotifications();
