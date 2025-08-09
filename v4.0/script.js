@@ -443,12 +443,11 @@ function renderTagColorList() {
     colorInput.type = "color";
     colorInput.value = calendarData.tagColors[tag];
     colorInput.addEventListener("change", () => {
-  calendarData.tagColors[tag] = colorInput.value;
-  saveToLocalStorage();
-  drawCalendar(currentDate);
-  renderTagColorList();
-});
-
+      calendarData.tagColors[tag] = colorInput.value;
+      saveToLocalStorage();
+      drawCalendar(currentDate);
+      renderTagColorList();
+    });
 
     const label = document.createElement("span");
     label.textContent = tag;
@@ -501,6 +500,7 @@ addTagBtn.addEventListener("click", () => {
   newTagName.focus();
 });
 
+// 設定モーダル表示・非表示
 settingsBtn.addEventListener("click", () => {
   settingsModalBg.style.display = "flex";
   renderTagColorList();
@@ -522,7 +522,7 @@ function getRandomColor() {
   return color;
 }
 
-// --- ナビゲーション ---
+// --- 月移動・今日ボタン ---
 prevMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
   drawCalendar(currentDate);
@@ -533,11 +533,11 @@ nextMonthBtn.addEventListener("click", () => {
 });
 todayBtn.addEventListener("click", () => {
   currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  currentDate.setHours(0,0,0,0);
   drawCalendar(currentDate);
 });
 
-// --- JSON保存・読込 ---
+// --- JSON保存・読み込み ---
 saveJsonBtn.addEventListener("click", () => {
   const jsonStr = JSON.stringify(calendarData, null, 2);
   const blob = new Blob([jsonStr], {type: "application/json"});
@@ -570,12 +570,12 @@ loadJsonInput.addEventListener("change", () => {
   loadJsonInput.value = "";
 });
 
-// --- 通知許可要求 ---
+// --- 通知機能 ---
+// 通知権限を確認して取得
 if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
   Notification.requestPermission();
 }
 
-// --- 画面内通知操作 ---
 notificationCloseBtn.addEventListener("click", () => {
   notificationPopup.style.display = "none";
 });
@@ -585,13 +585,13 @@ function showNotificationPopup(title, body) {
   notificationPopup.style.display = "block";
 }
 
-// --- 通知チェック ---
+// 1秒ごとに予定開始時刻と現在時刻を比較し通知
 function checkNotifications() {
   if (Notification.permission !== "granted") return;
 
   const now = new Date();
   const todayStr = formatDate(now);
-  const nowStr = now.toTimeString().slice(0, 8);
+  const nowStr = now.toTimeString().slice(0, 8); // "HH:MM:SS"
 
   const events = calendarData.events[todayStr] || [];
 
@@ -615,6 +615,7 @@ function checkNotifications() {
     }
   });
 
+  // 1分以上経過した通知はリセット
   for (const key of notifiedEvents) {
     const [dateStr, startTime] = key.split("|");
     if (dateStr !== todayStr) {
@@ -628,10 +629,8 @@ function checkNotifications() {
     }
   }
 }
-
-// --- 毎秒通知チェック開始 ---
 setInterval(checkNotifications, 1000);
 
-// --- 初期ロード ---
+// --- 初期処理 ---
 loadFromLocalStorage();
 drawCalendar(currentDate);
