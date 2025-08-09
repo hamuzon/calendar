@@ -13,21 +13,20 @@
 
   <div class="nav-buttons">
     <div class="nav-group main-nav">
-      <button id="prev-month" aria-label="前の月">◀ 前月</button> 
-      <span id="month-year" aria-live="polite" aria-atomic="true"></span> 
+      <button id="prev-month" aria-label="前の月">◀ 前月</button>
+      <span id="month-year" aria-live="polite" aria-atomic="true"></span>
       <button id="next-month" aria-label="次の月">翌月 ▶</button>
     </div>
     <div class="nav-group extra-nav">
-      <button id="today-button">今日</button> 
-      <button id="settings-btn" aria-haspopup="dialog" aria-controls="settings-modal-bg">設定 ⚙️</button> 
-      <button id="save-json-btn">保存 💾</button> 
-      <button id="load-json-btn">読み込み 📂</button> 
+      <button id="today-button">今日</button>
+      <button id="settings-btn" aria-haspopup="dialog" aria-controls="settings-modal-bg">設定 ⚙️</button>
+      <button id="save-json-btn">保存 💾</button>
+      <button id="load-json-btn">読み込み 📂</button>
       <input type="file" id="load-json-input" accept="application/json" style="display:none;" />
     </div>
   </div>
 </header>
 
-<!-- カレンダー本体 -->
 <div id="calendar-container">
   <table id="calendar" aria-label="カレンダー">
     <thead>
