@@ -35,6 +35,12 @@ const saveJsonBtn = document.getElementById("save-json-btn");
 const loadJsonBtn = document.getElementById("load-json-btn");
 const loadJsonInput = document.getElementById("load-json-input");
 
+// 通知ポップアップ要素
+const notificationPopup = document.getElementById("notification-popup");
+const notificationTitle = document.getElementById("notification-title");
+const notificationBody = document.getElementById("notification-body");
+const notificationCloseBtn = document.getElementById("notification-close-btn");
+
 // --- 状態管理 ---
 let currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
@@ -436,12 +442,13 @@ function renderTagColorList() {
     const colorInput = document.createElement("input");
     colorInput.type = "color";
     colorInput.value = calendarData.tagColors[tag];
-    colorInput.addEventListener("input", () => {
-      calendarData.tagColors[tag] = colorInput.value;
-      saveToLocalStorage();
-      drawCalendar(currentDate);
-      renderTagColorList();
-    });
+    colorInput.addEventListener("change", () => {
+  calendarData.tagColors[tag] = colorInput.value;
+  saveToLocalStorage();
+  drawCalendar(currentDate);
+  renderTagColorList();
+});
+
 
     const label = document.createElement("span");
     label.textContent = tag;
@@ -490,10 +497,13 @@ addTagBtn.addEventListener("click", () => {
   newTagName.value = "";
   saveToLocalStorage();
   renderTagColorList();
+  drawCalendar(currentDate);
+  newTagName.focus();
 });
+
 settingsBtn.addEventListener("click", () => {
-  renderTagColorList();
   settingsModalBg.style.display = "flex";
+  renderTagColorList();
 });
 settingsCancelBtn.addEventListener("click", () => {
   settingsModalBg.style.display = "none";
@@ -502,14 +512,17 @@ settingsModalBg.addEventListener("click", e => {
   if (e.target === settingsModalBg) settingsModalBg.style.display = "none";
 });
 
-// --- 今日ボタン ---
-todayBtn.addEventListener("click", () => {
-  currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
-  drawCalendar(currentDate);
-});
+// --- ランダムカラー生成 ---
+function getRandomColor() {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i=0; i<6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 
-// --- 月移動 ---
+// --- ナビゲーション ---
 prevMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
   drawCalendar(currentDate);
@@ -518,67 +531,66 @@ nextMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() + 1);
   drawCalendar(currentDate);
 });
+todayBtn.addEventListener("click", () => {
+  currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  drawCalendar(currentDate);
+});
 
-// --- ランダムカラー ---
-function getRandomColor() {
-  const letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
-
-// --- JSON保存・読み込み ---
+// --- JSON保存・読込 ---
 saveJsonBtn.addEventListener("click", () => {
-  const dataStr = JSON.stringify(calendarData, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+  const jsonStr = JSON.stringify(calendarData, null, 2);
+  const blob = new Blob([jsonStr], {type: "application/json"});
   const a = document.createElement("a");
-  a.href = url;
-  const now = new Date();
-  const fn = `Calendar-${CURRENT_SAVE_VERSION}_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.json`;
-  a.download = fn;
+  a.href = URL.createObjectURL(blob);
+  a.download = `Calendar-${CURRENT_SAVE_VERSION}_${formatDate(new Date())}.json`;
   a.click();
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(a.href);
 });
 
 loadJsonBtn.addEventListener("click", () => {
   loadJsonInput.click();
 });
-loadJsonInput.addEventListener("change", e => {
-  const file = e.target.files[0];
+loadJsonInput.addEventListener("change", () => {
+  const file = loadJsonInput.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = e => {
     try {
-      const json = JSON.parse(ev.target.result);
-      calendarData = convertDataToV4(json);
+      const data = JSON.parse(e.target.result);
+      calendarData = convertDataToV4(data);
       saveToLocalStorage();
       drawCalendar(currentDate);
-      alert("予定を読み込みました。");
+      alert("JSONファイルを読み込みました。");
     } catch {
-      alert("読み込みに失敗しました。JSON形式を確認してください。");
+      alert("無効なJSONファイルです。");
     }
   };
   reader.readAsText(file);
+  loadJsonInput.value = "";
 });
 
-// --- 通知機能 ---
-// Notification API対応チェック＆権限リクエスト
-if ("Notification" in window) {
-  if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-    Notification.requestPermission();
-  }
+// --- 通知許可要求 ---
+if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+  Notification.requestPermission();
 }
 
-// 1秒ごとに通知チェック
+// --- 画面内通知操作 ---
+notificationCloseBtn.addEventListener("click", () => {
+  notificationPopup.style.display = "none";
+});
+function showNotificationPopup(title, body) {
+  notificationTitle.textContent = title;
+  notificationBody.textContent = body;
+  notificationPopup.style.display = "block";
+}
+
+// --- 通知チェック ---
 function checkNotifications() {
   if (Notification.permission !== "granted") return;
 
   const now = new Date();
   const todayStr = formatDate(now);
-  // 現在時刻をHH:mm:ss形式で取得
   const nowStr = now.toTimeString().slice(0, 8);
 
   const events = calendarData.events[todayStr] || [];
@@ -586,7 +598,6 @@ function checkNotifications() {
   events.forEach(ev => {
     if (!ev.notify || !ev.start) return;
 
-    // ev.startがHH:mmのみの場合は秒を補完
     let evStart = ev.start.length === 5 ? ev.start + ":00" : ev.start;
 
     if (nowStr === evStart) {
@@ -596,14 +607,15 @@ function checkNotifications() {
           body: `${ev.start} - ${ev.text}`,
           icon: "/icon.svg"
         });
+
+        showNotificationPopup("予定の時間です！", `${ev.start} - ${ev.text}`);
+
         notifiedEvents.add(key);
       }
     }
   });
 
-  // 通知済みイベントの期限切れ判定（1分経過で解除）
   for (const key of notifiedEvents) {
-    // key = date|start|text で startはHH:mm or HH:mm:ss
     const [dateStr, startTime] = key.split("|");
     if (dateStr !== todayStr) {
       notifiedEvents.delete(key);
@@ -611,23 +623,15 @@ function checkNotifications() {
     }
     const [h, m, s] = startTime.split(":").map(Number);
     const eventDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
-    if ((now - eventDateTime) > 60000) { // 60秒経過したら解除
+    if ((now - eventDateTime) > 60000) {
       notifiedEvents.delete(key);
     }
   }
 }
 
-// 秒にズレを合わせてsetInterval開始
-function startNotificationChecker() {
-  const now = new Date();
-  const delay = 1000 - now.getMilliseconds();
-  setTimeout(() => {
-    checkNotifications();
-    setInterval(checkNotifications, 1000);
-  }, delay);
-}
+// --- 毎秒通知チェック開始 ---
+setInterval(checkNotifications, 1000);
 
-// --- 初期化 ---
+// --- 初期ロード ---
 loadFromLocalStorage();
 drawCalendar(currentDate);
-startNotificationChecker();
