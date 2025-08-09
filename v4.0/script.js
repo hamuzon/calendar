@@ -577,7 +577,7 @@ function init() {
   loadFromLocalStorage();
   drawCalendar(currentDate);
   requestNotificationPermission();
-  setInterval(checkNotifications, 60 * 1000); // 1分毎
+  setInterval(checkNotifications, 1000); // 
 }
 
 init();
