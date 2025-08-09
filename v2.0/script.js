@@ -1,5 +1,5 @@
 (() => {
-  const STORAGE_EVENTS = "calendar_events";
+  const STORAGE_KEY = "calendarData-v2";
   const STORAGE_VIEW = "calendar_view";
   const STORAGE_SETTINGS = "calendar_settings";
   const CALENDAR_VERSION = "2.0";
