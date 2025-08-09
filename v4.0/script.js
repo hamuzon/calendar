@@ -535,3 +535,6 @@ setInterval(checkNotifications, 60 * 1000);
 // ページ読み込み時に即チェック
 checkNotifications();
 
+// --- 初期処理 ---
+loadFromLocalStorage();
+drawCalendar(currentDate);
