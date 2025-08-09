@@ -9,7 +9,6 @@
   <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
   <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
   <style>
-    /* （省略せずそのままのCSS、文法ミスなし） */
     :root {
       --bg: #121212;
       --text: #f0e6d2;
@@ -155,21 +154,6 @@
       display: inline-block;
       margin: 0.2em 0;
     }
-
-    .notice {
-      margin-top: clamp(1.1rem, 3vw, 1.6rem);
-      padding: 1rem 1.1rem;
-      background: rgba(255,165,0,0.15);
-      border-left: 6px solid var(--notice);
-      border-radius: 6px;
-      color: var(--notice);
-      font-weight: 700;
-      line-height: 1.5;
-      font-size: clamp(0.95rem, 3vw, 1.15rem);
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-    }
   </style>
 </head>
 <body>
@@ -211,11 +195,6 @@
           v3.0 は v2.0 の JSON 形式と互換性があります。<br />
           v4.0 は v1.0 ～ v4.0 の JSON 形式に対応しており、通知時間に簡易警告を表示します。
         </p>
-
-        <div class="notice" role="alert">
-          ⚠️ 注意: v1.0 と v2.0 を同時に使用すると、どちらか一方の表示が崩れることがあります。<br />
-          一度に 1 つのバージョンのみの利用を推奨します。
-        </div>
       </section>
     </div>
 
@@ -254,11 +233,6 @@
           v3.0 is backward compatible with the JSON format of v2.0.<br />
           v4.0 supports JSON formats from v1.0 to v4.0 and will display a simple warning at the notification time.
         </p>
-
-        <div class="notice" role="alert">
-          ⚠️ Caution: Using v1.0 and v2.0 at the same time may cause one of the versions to display incorrectly.<br />
-          We recommend using only one version at a time.
-        </div>
       </section>
     </div>
   </div>
