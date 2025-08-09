@@ -497,14 +497,51 @@ prevMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
   drawCalendar(currentDate);
 });
+
 nextMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() + 1);
   drawCalendar(currentDate);
 });
+
 todayBtn.addEventListener("click", () => {
   currentDate = new Date();
   currentDate.setHours(0, 0, 0, 0);
   drawCalendar(currentDate);
+});
+
+// --- JSON保存・読込み ---
+saveJsonBtn.addEventListener("click", () => {
+  const dataStr = JSON.stringify(calendarData, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Calendar-${CURRENT_SAVE_VERSION}_${formatDate(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+loadJsonBtn.addEventListener("click", () => {
+  loadJsonInput.click();
+});
+
+loadJsonInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      calendarData = convertDataToV4(data);
+      saveToLocalStorage();
+      drawCalendar(currentDate);
+      alert("カレンダーの読み込みに成功しました。");
+    } catch {
+      alert("ファイルの読み込みに失敗しました。正しい形式のJSONファイルを指定してください。");
+    }
+  };
+  reader.readAsText(file);
+  loadJsonInput.value = "";
 });
 
 // --- ランダムカラー生成 ---
@@ -518,66 +555,60 @@ function getRandomColor() {
 }
 
 // --- 通知機能 ---
-// 通知権限リクエスト
-function requestNotificationPermission() {
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "default") {
+// 通知が許可されていなければ要求
+if ("Notification" in window) {
+  if (Notification.permission !== "granted" && Notification.permission !== "denied") {
     Notification.requestPermission();
   }
 }
-// 通知送信
-function sendNotification(title, body) {
-  if (!("Notification" in window)) {
-    console.warn("このブラウザは通知をサポートしていません。");
-    return;
-  }
 
-  if (Notification.permission === "granted") {
-    new Notification(title, { body });
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(permission => {
-      if (permission === "granted") {
-        new Notification(title, { body });
-      }
-    });
-  }
-}
-
-// --- 通知チェック（1分毎） ---
-function checkNotifications() {
+// 毎秒通知チェック
+setInterval(() => {
   if (Notification.permission !== "granted") return;
+
   const now = new Date();
+  const nowTime = now.getHours() * 60 + now.getMinutes();
 
-  for (const dateStr in calendarData.events) {
-    const events = calendarData.events[dateStr];
-    events.forEach(ev => {
-      if (!ev.notify) return;
-      if (!ev.start) return;
+  // 今日の日付文字列
+  const todayStr = formatDate(now);
 
-      // 日付一致チェック
-      if (dateStr !== formatDate(now)) return;
+  const todayEvents = calendarData.events[todayStr] || [];
+  todayEvents.forEach(ev => {
+    if (!ev.notify || !ev.start) return;
 
-      // 時刻比較
-      const [h, m] = ev.start.split(":").map(x => parseInt(x, 10));
-      if (isNaN(h) || isNaN(m)) return;
+    // 開始時間を分に変換
+    const [h, m] = ev.start.split(":").map(Number);
+    if (isNaN(h) || isNaN(m)) return;
 
-      if (now.getHours() === h && now.getMinutes() === m) {
-        const key = eventUniqueKey(dateStr, ev.start, ev.text);
-        if (!notifiedEvents.has(key)) {
-          sendNotification("予定の通知", `${ev.start} - ${ev.text}`);
-          notifiedEvents.add(key);
-        }
+    const eventTime = h * 60 + m;
+
+    // 今の時間とイベント開始時間の差が0〜1分なら通知
+    if (nowTime >= eventTime && nowTime < eventTime + 1) {
+      const key = eventUniqueKey(todayStr, ev.start, ev.text);
+      if (!notifiedEvents.has(key)) {
+        // 通知表示
+        new Notification("予定の時間です！", {
+          body: `${ev.start} - ${ev.text}`,
+          icon: "/icon.svg"
+        });
+        notifiedEvents.add(key);
       }
-    });
-  }
-}
+    }
+  });
 
-// --- 初期処理 ---
-function init() {
-  loadFromLocalStorage();
-  drawCalendar(currentDate);
-  requestNotificationPermission();
-  setInterval(checkNotifications, 1000); // 
-}
+  // 1分以上経過した通知はSetから削除（過去の通知クリア）
+  notifiedEvents.forEach(key => {
+    const parts = key.split("|");
+    if (parts.length < 2) return;
+    const timeParts = parts[1].split(":").map(Number);
+    if (timeParts.length < 2) return;
+    const eventTime = timeParts[0] * 60 + timeParts[1];
+    if (nowTime > eventTime + 1) {
+      notifiedEvents.delete(key);
+    }
+  });
+}, 1000);
 
-init();
+// --- 初期化 ---
+loadFromLocalStorage();
+drawCalendar(currentDate);
