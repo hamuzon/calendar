@@ -9,7 +9,151 @@
   <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
   <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
   <style>
-    /* 省略 (元のCSS部分そのまま) */
+    :root {
+      --bg: #121212;
+      --text: #f0e6d2;
+      --button-bg: #4b4130;
+      --button-hover: #6a5f48;
+      --notice: #d38c4a;
+      --focus-outline: #c5b38f;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f7f3e9;
+        --text: #3b2f2f;
+        --button-bg: #d8c6a1;
+        --button-hover: #c5b38f;
+        --notice: #c46c00;
+        --focus-outline: #927c54;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem 1rem 2rem;
+      font-family: "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      text-align: center;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #container {
+      width: 90vw;
+      max-width: 700px;
+      min-width: 280px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .lang-switch {
+      background: var(--button-bg);
+      color: var(--text);
+      border: none;
+      border-radius: 6px;
+      padding: 0.45em 1em;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      cursor: pointer;
+      user-select: none;
+      margin: 0 auto 1.8rem;
+      display: inline-block;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .lang-switch:hover,
+    .lang-switch:focus {
+      background: var(--button-hover);
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 2px;
+    }
+
+    h1 {
+      font-size: clamp(1.9rem, 6vw, 3.2rem);
+      margin: 0 0 1.3rem;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      margin: 0.6em 0;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .version-links {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.5rem, 1.5vw, 1rem);
+      max-width: 320px;
+      margin: 0 auto 2rem;
+      padding: 0 0.5rem;
+    }
+
+    a.version-btn {
+      background: var(--button-bg);
+      color: var(--text);
+      text-decoration: none;
+      padding: clamp(0.5em, 1.5vw, 0.8em);
+      border-radius: 10px;
+      font-size: clamp(1.05rem, 3vw, 1.25rem);
+      font-weight: 700;
+      box-shadow: 0 4px 9px rgba(0,0,0,0.55);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+      display: block;
+    }
+    a.version-btn:hover,
+    a.version-btn:focus {
+      background: var(--button-hover);
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 2px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.75);
+    }
+
+    section {
+      margin-top: clamp(1.7rem, 4vw, 2.8rem);
+      text-align: left;
+      padding: 0 1rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h2 {
+      color: var(--button-hover);
+      margin-bottom: 0.6rem;
+      font-size: clamp(1.3rem, 4vw, 1.9rem);
+      font-weight: 700;
+      border-bottom: 2px solid var(--button-hover);
+      padding-bottom: 0.3rem;
+    }
+
+    h3 {
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-size: clamp(1.05rem, 3vw, 1.35rem);
+      font-weight: 600;
+    }
+
+    code {
+      background: rgba(255,255,255,0.1);
+      padding: 0.25em 0.45em;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 0.97rem;
+      user-select: text;
+      word-break: break-word;
+      display: inline-block;
+      margin: 0.2em 0;
+    }
   </style>
 </head>
 <body>
@@ -31,19 +175,15 @@
         <h2>JSONファイル名の命名規則の違い</h2>
 
         <h3>v1.0 のファイル名</h3>
-        <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
         <p class="example-date-ja"><code>例: calendar_events_20250710_183015.json</code></p>
 
         <h3>v2.0 のファイル名</h3>
-        <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p class="example-date-ja"><code>例: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
 
         <h3>v3.0 のファイル名</h3>
-        <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p class="example-date-ja"><code>例: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
 
         <h3>v4.0 のファイル名</h3>
-        <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json</code></p>
         <p class="example-date-ja"><code>例: Calendar-4.0_2025-07-10_18-30-15.json</code></p>
 
         <p>
@@ -69,19 +209,15 @@
         <h2>Differences in JSON Filename Format</h2>
 
         <h3>v1.0 format</h3>
-        <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
         <p class="example-date-en"><code>Example: calendar_events_20250710_183015.json</code></p>
 
         <h3>v2.0 format</h3>
-        <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p class="example-date-en"><code>Example: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
 
         <h3>v3.0 format</h3>
-        <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
         <p class="example-date-en"><code>Example: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
 
         <h3>v4.0 format</h3>
-        <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json</code></p>
         <p class="example-date-en"><code>Example: Calendar-4.0_2025-07-10_18-30-15.json</code></p>
 
         <p>
@@ -140,7 +276,7 @@
       const mm = padZero(now.getMinutes());
       const ss = padZero(now.getSeconds());
 
-      // 日本語例文を置換
+      // 日本語の例
       document.querySelectorAll('.example-date-ja').forEach(el => {
         let text = el.textContent;
 
@@ -149,14 +285,13 @@
         } else if (text.includes('Calendar-4.0')) {
           el.textContent = `例: Calendar-4.0_${YYYY}-${MM}-${DD}_${HH}-${mm}-${ss}.json`;
         } else if (text.includes('Calendar-')) {
-          // v2.0, v3.0
           const verMatch = text.match(/Calendar-(\d\.\d)/);
           const version = verMatch ? verMatch[1] : 'x.x';
           el.textContent = `例: Calendar-${version}_${YYYY}_${MM}_${DD}_${HH}_${mm}_${ss}.json`;
         }
       });
 
-      // 英語例文を置換
+      // 英語の例
       document.querySelectorAll('.example-date-en').forEach(el => {
         let text = el.textContent;
 
