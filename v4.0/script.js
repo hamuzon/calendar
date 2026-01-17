@@ -579,6 +579,51 @@ if ("Notification" in window && Notification.permission !== "granted" && Notific
 notificationCloseBtn.addEventListener("click", () => {
   notificationPopup.style.display = "none";
 });
+
+// --- Service Worker & Web Push Setup ---
+const VAPID_PUBLIC_KEY = "YOUR_VAPID_PUBLIC_KEY"; 
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").then(() => {
+    console.log("Service Worker Registered");
+  });
+}
+
+// 設定モーダルにプッシュ通知有効化ボタンを追加
+const pushSubscribeBtn = document.createElement("button");
+pushSubscribeBtn.textContent = "Webプッシュ通知を有効にする";
+pushSubscribeBtn.style.marginTop = "15px";
+pushSubscribeBtn.style.width = "100%";
+pushSubscribeBtn.addEventListener("click", async () => {
+  if (!("serviceWorker" in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+  try {
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    console.log("Push Subscription:", JSON.stringify(sub));
+    alert("Webプッシュ通知を有効にしました。\nコンソールに表示されたSubscription情報をサーバーに登録してください。");
+  } catch (e) {
+    console.error(e);
+    alert("Webプッシュ通知の有効化に失敗しました。\nVAPIDキーの設定などを確認してください。");
+  }
+});
+if (settingsCancelBtn && settingsCancelBtn.parentNode) {
+  settingsCancelBtn.parentNode.insertBefore(pushSubscribeBtn, settingsCancelBtn);
+}
+
 function showNotificationPopup(title, body) {
   notificationTitle.textContent = title;
   notificationBody.textContent = body;
@@ -591,17 +636,17 @@ function checkNotifications() {
 
   const now = new Date();
   const todayStr = formatDate(now);
-  const nowStr = now.toTimeString().slice(0, 8); // "HH:MM:SS"
 
   const events = calendarData.events[todayStr] || [];
 
   events.forEach(ev => {
     if (!ev.notify || !ev.start) return;
 
-    // start 時刻を HH:MM:SS 形式に補完
-    let evStart = ev.start.length === 5 ? ev.start + ":00" : ev.start;
+    const [h, m] = ev.start.split(":").map(Number);
+    const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+    const diff = now - eventTime;
 
-    if (nowStr === evStart) {
+    if (diff >= 0 && diff < 60000) {
       const key = eventUniqueKey(todayStr, ev.start, ev.text);
       if (!notifiedEvents.has(key)) {
         // 通知タイトルと本文組み立て
@@ -614,10 +659,16 @@ function checkNotifications() {
 
         const body = bodyParts.join("\n");
 
-        new Notification(title, {
-          body: body,
-          icon: "/icon.svg"
-        });
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, { body: body, icon: "/icon.svg" });
+          });
+        } else {
+          new Notification(title, {
+            body: body,
+            icon: "/icon.svg"
+          });
+        }
 
         showNotificationPopup(title, body);
 

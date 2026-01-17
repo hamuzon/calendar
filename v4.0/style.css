@@ -194,7 +194,8 @@ header h1 {
 }
 
 .today {
-  border: 2px solid #4a7c59;
+  background-color: #fff9e6; 
+  border: 2px solid #ffc107; 
 }
 
 td > div:first-child {
