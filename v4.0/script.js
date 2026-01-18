@@ -600,35 +600,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// 設定モーダルにプッシュ通知有効化ボタンを追加
-const pushSubscribeBtn = document.createElement("button");
-pushSubscribeBtn.textContent = "Webプッシュ通知を有効にする";
-pushSubscribeBtn.style.marginTop = "15px";
-pushSubscribeBtn.style.width = "100%";
-pushSubscribeBtn.addEventListener("click", async () => {
-  if (!("serviceWorker" in navigator)) return;
-  const reg = await navigator.serviceWorker.ready;
-  try {
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-    console.log("Push Subscription:", JSON.stringify(sub));
-    alert("Webプッシュ通知を有効にしました。\nコンソールに表示されたSubscription情報をサーバーに登録してください。");
-  } catch (e) {
-    console.error(e);
-    alert("Webプッシュ通知の有効化に失敗しました。\nVAPIDキーの設定などを確認してください。");
-  }
-});
-if (settingsCancelBtn && settingsCancelBtn.parentNode) {
-  settingsCancelBtn.parentNode.insertBefore(pushSubscribeBtn, settingsCancelBtn);
-}
-
-function showNotificationPopup(title, body) {
-  notificationTitle.textContent = title;
-  notificationBody.textContent = body;
-  notificationPopup.style.display = "block";
-}
 
 // 1秒ごとに予定開始時刻と現在時刻を比較し通知
 function checkNotifications() {
