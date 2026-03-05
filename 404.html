@@ -92,19 +92,18 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const calendarTopUrl = "https://hamuzon.github.io/calendar/";
-      const isCalendarGitHubPages =
-        location.hostname === "hamuzon.github.io" && location.pathname.startsWith("/calendar/");
-
+      const supportedVersions = new Set(["v1.0", "v2.0", "v3.0", "v4.0"]);
+      const pathSegments = location.pathname.split("/").filter(Boolean);
+      const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
       const backLink = document.getElementById("backLink");
 
-      if (isCalendarGitHubPages) {
-        backLink.href = calendarTopUrl;
-        location.replace(calendarTopUrl);
+      if (versionSegmentIndex !== -1) {
+        const versionPath = `/${pathSegments.slice(0, versionSegmentIndex + 1).join("/")}/`;
+        backLink.href = versionPath;
         return;
       }
 
-      backLink.href = "/";
+      backLink.href = `${location.origin}/`;
     });
   </script>
 </body>
