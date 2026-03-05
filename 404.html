@@ -96,14 +96,21 @@
       const pathSegments = location.pathname.split("/").filter(Boolean);
       const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
       const backLink = document.getElementById("backLink");
+      const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
+      const basePath = isHamuzonGithubIo ? "/calendar/" : "/";
 
       if (versionSegmentIndex !== -1) {
+        if (isHamuzonGithubIo) {
+          backLink.href = `${location.origin}/calendar/${pathSegments[versionSegmentIndex]}/`;
+          return;
+        }
+
         const versionPath = `/${pathSegments.slice(0, versionSegmentIndex + 1).join("/")}/`;
         backLink.href = versionPath;
         return;
       }
 
-      backLink.href = `${location.origin}/`;
+      backLink.href = `${location.origin}${basePath}`;
     });
   </script>
 </body>
