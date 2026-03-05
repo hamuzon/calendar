@@ -95,12 +95,20 @@
       const calendarTopUrl = "https://hamuzon.github.io/calendar/";
       const isCalendarGitHubPages =
         location.hostname === "hamuzon.github.io" && location.pathname.startsWith("/calendar/");
+      const versionPattern = /^v\d+\.\d+$/;
+      const pathSegments = location.pathname.split("/").filter(Boolean);
+      const versionSegmentIndex = pathSegments.findIndex((segment) => versionPattern.test(segment));
 
       const backLink = document.getElementById("backLink");
 
+      if (versionSegmentIndex !== -1) {
+        const versionPath = `/${pathSegments.slice(0, versionSegmentIndex + 1).join("/")}/`;
+        backLink.href = versionPath;
+        return;
+      }
+
       if (isCalendarGitHubPages) {
         backLink.href = calendarTopUrl;
-        location.replace(calendarTopUrl);
         return;
       }
 
