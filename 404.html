@@ -92,6 +92,14 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const projectBasePath = "/calendar/";
+      const normalizedPath = location.pathname.endsWith("/") ? location.pathname : `${location.pathname}/`;
+
+      if (normalizedPath.startsWith(projectBasePath) && normalizedPath !== projectBasePath) {
+        location.replace(`${location.origin}${projectBasePath}`);
+        return;
+      }
+
       const supportedVersions = new Set(["v1.0", "v2.0", "v3.0", "v4.0"]);
       const pathSegments = location.pathname.split("/").filter(Boolean);
       const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
