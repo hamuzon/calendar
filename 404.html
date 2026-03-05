@@ -88,18 +88,10 @@
   <h1>404</h1>
   <p>お探しのページは見つかりませんでした。</p>
   <p class="subtext">Sorry, the page you’re looking for could not be found.</p>
-  <a id="backLink" class="back" href="/">トップページへ戻る</a>
+  <a id="backLink" class="back" href="/calendar/">トップページへ戻る</a>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const projectBasePath = "/calendar/";
-      const normalizedPath = location.pathname.endsWith("/") ? location.pathname : `${location.pathname}/`;
-
-      if (normalizedPath.startsWith(projectBasePath) && normalizedPath !== projectBasePath) {
-        location.replace(`${location.origin}${projectBasePath}`);
-        return;
-      }
-
       const supportedVersions = new Set(["v1.0", "v2.0", "v3.0", "v4.0"]);
       const pathSegments = location.pathname.split("/").filter(Boolean);
       const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
@@ -111,7 +103,7 @@
         return;
       }
 
-      backLink.href = `${location.origin}/`;
+      backLink.href = `${location.origin}/calendar/`;
     });
   </script>
 </body>
