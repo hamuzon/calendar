@@ -88,7 +88,7 @@
   <h1>404</h1>
   <p>お探しのページは見つかりませんでした。</p>
   <p class="subtext">Sorry, the page you’re looking for could not be found.</p>
-  <a id="backLink" class="back" href="/calendar/">トップページへ戻る</a>
+  <a id="backLink" class="back" href="/">トップページへ戻る</a>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -96,14 +96,21 @@
       const pathSegments = location.pathname.split("/").filter(Boolean);
       const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
       const backLink = document.getElementById("backLink");
+      const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
+      const basePath = isHamuzonGithubIo ? "/calendar/" : "/";
 
       if (versionSegmentIndex !== -1) {
+        if (isHamuzonGithubIo) {
+          backLink.href = `${location.origin}/calendar/${pathSegments[versionSegmentIndex]}/`;
+          return;
+        }
+
         const versionPath = `/${pathSegments.slice(0, versionSegmentIndex + 1).join("/")}/`;
         backLink.href = versionPath;
         return;
       }
 
-      backLink.href = `${location.origin}/calendar/`;
+      backLink.href = `${location.origin}${basePath}`;
     });
   </script>
 </body>
