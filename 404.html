@@ -91,14 +91,21 @@
   <a id="backLink" class="back" href="/">トップページへ戻る</a>
 
   <script>
-    const calendarTopUrl = "https://hamuzon.github.io/calendar/";
+    document.addEventListener("DOMContentLoaded", () => {
+      const calendarTopUrl = "https://hamuzon.github.io/calendar/";
+      const isCalendarGitHubPages =
+        location.hostname === "hamuzon.github.io" && location.pathname.startsWith("/calendar/");
 
-    if (location.hostname === "hamuzon.github.io") {
-      location.replace(calendarTopUrl);
-    }
+      const backLink = document.getElementById("backLink");
 
-    const backLink = document.getElementById("backLink");
-    backLink.href = location.hostname === "hamuzon.github.io" ? calendarTopUrl : "/";
+      if (isCalendarGitHubPages) {
+        backLink.href = calendarTopUrl;
+        location.replace(calendarTopUrl);
+        return;
+      }
+
+      backLink.href = "/";
+    });
   </script>
 </body>
 </html>
