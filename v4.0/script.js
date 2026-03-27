@@ -601,11 +601,26 @@ loadJsonInput.addEventListener("change", () => {
   reader.onload = e => {
     try {
       const json = JSON.parse(e.target.result);
+
+      if (json.settings && json.settings.app === "todo-list") {
+        return;
+      }
+
+      let versionToLoad = null;
+
       if (json.version && SUPPORTED_VERSIONS.includes(json.version)) {
+        // 明示的なバージョン指定がある場合
+        versionToLoad = json.version;
+      } else if (!json.version && json.events && typeof json.events === "object") {
+        // v1.0の形式（versionがなく、eventsオブジェクトが存在する）
+        versionToLoad = "1.0";
+      }
+
+      if (versionToLoad) {
         calendarData = convertDataToV4(json);
         saveToLocalStorage();
         drawCalendar(currentDate);
-        alert(`バージョン${json.version}のファイルを読み込みました`);
+        alert(`バージョン${versionToLoad}のファイルを読み込みました`);
       } else {
         alert("非対応バージョンのファイルです");
       }
