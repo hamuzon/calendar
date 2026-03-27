@@ -6,6 +6,14 @@
 <title>カレンダー / Calendar</title>
 <link rel="icon" href="icon-light.svg" type="image/svg+xml" />
 <link rel="stylesheet" href="style.css" />
+<style>
+  #save-load-controls { max-width: 720px; margin: 0 auto 20px auto; text-align: center; }
+  .hidden-input { display: none; }
+  .modal-section-right { text-align: right; margin-top: 6px; }
+  .modal-footer-btns { margin-top: 15px; text-align: right; }
+  .tag-add-container { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  .modal-form-actions { margin-top: 10px; }
+</style>
 </head>
 <body>
 <header>
@@ -32,9 +40,9 @@
 
 <button id="today-button">今日へ戻る / Today</button>
 
-<div id="save-load-controls" style="max-width:720px;margin:0 auto 20px auto;text-align:center;">
+<div id="save-load-controls">
   <button id="save-json-btn">予定を保存 / Save</button>
-  <input type="file" id="load-json-input" style="display:none" accept=".json" />
+  <input type="file" id="load-json-input" class="hidden-input" accept=".json" title="JSONファイルを読み込む" />
   <button id="load-json-btn">予定を読み込む / Load</button>
 </div>
 
@@ -54,11 +62,11 @@
     <input type="time" id="new-event-end" />
     <label for="new-event-text">予定とタグ（複数行可）</label>
     <textarea id="new-event-text" placeholder="例: 会議 #仕事"></textarea>
-    <div style="text-align: right; margin-top: 6px;">
+    <div class="modal-section-right">
       <button id="add-event-btn">追加 / Add</button>
     </div>
 
-    <div class="modal-buttons" style="margin-top: 15px; text-align: right;">
+    <div class="modal-buttons modal-footer-btns">
       <button id="close-btn">閉じる / Close</button>
     </div>
   </div>
@@ -72,13 +80,13 @@
       <fieldset>
         <legend>タグと色 / Tag Colors</legend>
         <div id="tag-color-list"></div>
-        <div id="tag-add-row" style="display:flex; gap:8px; align-items:center; margin-top:10px;">
+        <div id="tag-add-row" class="tag-add-container">
           <input type="text" id="new-tag-name" placeholder="新しいタグ名" />
-          <input type="color" id="new-tag-color" value="#4a7c59" />
+          <input type="color" id="new-tag-color" value="#4a7c59" title="タグの色を選択" />
           <button id="add-tag-btn" type="button">追加 / Add</button>
         </div>
       </fieldset>
-      <div class="modal-buttons" style="margin-top:10px;">
+      <div class="modal-buttons modal-form-actions">
         <button type="submit">保存</button>
         <button type="button" id="settings-cancel-btn">キャンセル</button>
       </div>

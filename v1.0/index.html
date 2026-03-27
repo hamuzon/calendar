@@ -33,9 +33,9 @@
 
   <button id="today-button" aria-label="今日へ戻る">今日へ戻る</button>
 
-  <div id="save-load-controls" style="max-width:720px;margin:10px auto;text-align:center;">
+  <div id="save-load-controls">
     <button id="save-json-btn">予定を保存</button>
-    <input type="file" id="load-json-input" style="display:none" accept=".json" />
+    <input type="file" id="load-json-input" class="file-input-hidden" accept=".json" aria-label="JSONファイルを選択" />
     <button id="load-json-btn">予定を読み込む</button>
   </div>
 
@@ -55,7 +55,7 @@
   </div>
 
   <!-- 設定モーダル -->
-  <div id="settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1" style="display:none;">
+  <div id="settings-modal-bg" class="modal-bg modal-bg--hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
     <div id="settings-modal">
       <h2 id="settings-title">設定</h2>
       <form id="settings-form">
@@ -64,7 +64,7 @@
           <div id="tag-color-list">
             <!-- JSでタグ色設定UIを動的生成 -->
           </div>
-          <div id="tag-add-row" style="margin-top:15px; display:flex; gap:8px; align-items:center;">
+          <div id="tag-add-row">
             <input type="text" id="new-tag-name" placeholder="新しいタグ名" aria-label="新しいタグ名" />
             <input type="color" id="new-tag-color" value="#4c6cb3" aria-label="新しいタグの色" />
             <button id="add-tag-btn" type="button">追加</button>

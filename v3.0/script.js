@@ -110,8 +110,8 @@ function drawCalendar(date) {
       }
 
       const dayDiv = document.createElement("div");
+      dayDiv.className = "day-number";
       dayDiv.textContent = dayNumber;
-      dayDiv.style.fontWeight = "bold";
       td.appendChild(dayDiv);
       td.dataset.date = formatDate(cellDate);
 
@@ -144,7 +144,6 @@ function drawCalendar(date) {
       });
 
       if (!isAdjacent) {
-        td.style.cursor = "pointer";
         td.addEventListener("click", () => openModal(cellDate));
       }
 

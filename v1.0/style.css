@@ -83,6 +83,7 @@ button {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   transition: background-color 0.3s ease;
 }
@@ -102,6 +103,7 @@ th, td {
   text-align: center;
   vertical-align: top;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
 }
 th {
@@ -203,4 +205,22 @@ textarea, input[type="time"], input[type="color"], input[type="text"] {
 }
 .tag-row button:hover {
   background: #983f2a;
+}
+
+#save-load-controls {
+  max-width: 720px;
+  margin: 10px auto;
+  text-align: center;
+}
+.file-input-hidden {
+  display: none;
+}
+.modal-bg--hidden {
+  display: none;
+}
+#tag-add-row {
+  margin-top: 15px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
