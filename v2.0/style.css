@@ -110,6 +110,7 @@ button {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   transition: background-color 0.3s ease;
 }
@@ -128,6 +129,7 @@ th, td {
   height: 80px;
   text-align: left;
   vertical-align: top;
+  -webkit-user-select: none;
   user-select: none;
   overflow: hidden;
 }

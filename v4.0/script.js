@@ -603,6 +603,7 @@ loadJsonInput.addEventListener("change", () => {
       const json = JSON.parse(e.target.result);
 
       if (json.settings && json.settings.app === "todo-list") {
+        alert("非対応バージョンのファイルです");
         return;
       }
 

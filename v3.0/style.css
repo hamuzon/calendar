@@ -152,6 +152,7 @@ button {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   transition: background-color 0.3s ease;
 }
@@ -172,8 +173,13 @@ th, td {
   height: 80px;
   text-align: left;
   vertical-align: top;
+  -webkit-user-select: none;
   user-select: none;
   overflow: hidden;
+}
+
+.day-number {
+  font-weight: bold;
 }
 
 /* 日曜・土曜背景色 */
@@ -192,11 +198,22 @@ td.today {
   background: #e6f4e6;
 }
 
+/* クリック可能なセル */
+td[data-date], td[data-date-key] {
+  cursor: pointer;
+}
+
 /* 月の範囲外セル */
 td.adjacent-month {
   color: #999;
   background: #f0f0f0;
   cursor: default !important;
+}
+
+/* 空のセル */
+td.empty-cell {
+  cursor: default;
+  background: transparent;
 }
 
 /* ====== 予定表示 ====== */
@@ -213,6 +230,10 @@ td.adjacent-month {
   text-overflow: ellipsis;
 }
 
+.event-time {
+  font-weight: bold;
+}
+
 /* タグのラベル */
 .event-tag {
   padding: 0 4px;
@@ -221,6 +242,15 @@ td.adjacent-month {
   font-size: 0.75em;
   color: white;
   display: inline-block;
+}
+
+.event-location {
+  margin-left: 4px;
+  font-size: 0.75em;
+}
+
+.event-notify {
+  margin-left: 4px;
 }
 
 /* ====== モーダル背景 ====== */
@@ -345,4 +375,13 @@ textarea, input[type="time"], input[type="color"], input[type="text"] {
   textarea, input[type="time"] {
     font-size: 13px;
   }
+}
+
+/* Replacements for inline styles from index.html */
+#load-json-input {
+  display: none;
+}
+footer {
+  margin-top: 20px;
+  text-align: center;
 }
