@@ -433,7 +433,6 @@ td > div:first-child {
 
 /* 初期状態の非表示設定 */
 #load-json-input,
-#import-ics-input,
 .notification-popup {
   display: none;
 }

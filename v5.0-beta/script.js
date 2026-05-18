@@ -32,12 +32,9 @@ const addTagBtn = document.getElementById("add-tag-btn");
 const settingsCancelBtn = document.getElementById("settings-cancel-btn");
 
 const saveJsonBtn = document.getElementById("save-json-btn");
-const saveCompressedBtn = document.getElementById("save-compressed-btn");
 const loadJsonBtn = document.getElementById("load-json-btn");
 const loadJsonInput = document.getElementById("load-json-input");
-const importIcsBtn = document.getElementById("import-ics-btn");
 const exportIcsBtn = document.getElementById("export-ics-btn");
-const importIcsInput = document.getElementById("import-ics-input");
 
 // 通知ポップアップ要素
 const notificationPopup = document.getElementById("notification-popup");
@@ -211,6 +208,9 @@ function drawCalendar(date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   monthYear.textContent = `${year}年 ${month + 1}月`;
+  if (typeof updateUrlQuery === "function" && modalBg.style.display !== "flex") {
+    updateUrlQuery({ year, month });
+  }
 
   const firstDay = new Date(year, month, 1);
   const firstWeekday = firstDay.getDay();
@@ -577,9 +577,39 @@ todayBtn.addEventListener("click", () => {
   drawCalendar(currentDate);
 });
 
+// --- URLクエリ同期 ---
+function updateUrlQuery({year, month, day = null}) {
+  const params = new URLSearchParams();
+  params.set("y", String(year));
+  params.set("m", String(month + 1));
+  if (day !== null) params.set("d", String(day));
+  history.replaceState(null, "", `?${params.toString()}`);
+}
+
+function applyInitialQuery() {
+  const params = new URLSearchParams(location.search);
+  const y = Number(params.get("y"));
+  const m = Number(params.get("m"));
+  const d = Number(params.get("d"));
+
+  if (Number.isInteger(y) && Number.isInteger(m) && m >= 1 && m <= 12) {
+    currentDate = new Date(y, m - 1, 1);
+    currentDate.setHours(0, 0, 0, 0);
+  }
+
+  drawCalendar(currentDate);
+
+  if (Number.isInteger(d) && d >= 1 && d <= 31 && Number.isInteger(y) && Number.isInteger(m)) {
+    const target = new Date(y, m - 1, d);
+    if (target.getMonth() === m - 1) openModal(target);
+  } else {
+    updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+  }
+}
+
 // --- JSON保存・読み込み ---
 saveJsonBtn.addEventListener("click", () => {
-  const jsonStr = JSON.stringify(calendarData, null, 2);
+  const jsonStr = JSON.stringify(calendarData);
   const blob = new Blob([jsonStr], {type: "application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -589,8 +619,8 @@ saveJsonBtn.addEventListener("click", () => {
   const d = pad(now.getDate());
   const h = pad(now.getHours());
   const min = pad(now.getMinutes());
-  const s = pad(now.getSeconds());
-  a.download = `Calendar-${CURRENT_SAVE_VERSION}_${y}-${m}-${d}_${h}-${min}-${s}.json`;
+  const sec = pad(now.getSeconds());
+  a.download = `Calendar-v5_${y}-${m}-${d}_${h}-${min}-${sec}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
@@ -598,69 +628,158 @@ saveJsonBtn.addEventListener("click", () => {
 loadJsonBtn.addEventListener("click", () => {
   loadJsonInput.click();
 });
-loadJsonInput.addEventListener("change", () => {
+
+function parseIcsDateTime(value) {
+  const raw = value.replace(/Z$/, "");
+  const date = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
+  const time = raw.includes("T") ? `${raw.slice(9,11)}:${raw.slice(11,13)}` : "";
+  return { date, time };
+}
+
+function parseRRule(ruleText) {
+  const out = {};
+  ruleText.split(";").forEach(part => {
+    const [k, v] = part.split("=");
+    if (k && v) out[k] = v;
+  });
+  return out;
+}
+
+function expandRecurringDates(startDateStr, rruleText) {
+  const rule = parseRRule(rruleText || "");
+  const freq = rule.FREQ;
+  if (!freq) return [startDateStr];
+
+  const interval = Number(rule.INTERVAL || "1") || 1;
+  const count = Number(rule.COUNT || "0") || 0;
+  const untilRaw = rule.UNTIL || "";
+  const untilDate = untilRaw ? new Date(untilRaw.slice(0,4), Number(untilRaw.slice(4,6)) - 1, Number(untilRaw.slice(6,8))) : null;
+  const byday = (rule.BYDAY || "").split(",").filter(Boolean);
+  const start = new Date(startDateStr + "T00:00:00");
+
+  const weekdayMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
+  const results = [];
+
+  const pushIfValid = (dt) => {
+    if (untilDate && dt > untilDate) return false;
+    results.push(formatDate(dt));
+    return true;
+  };
+
+  if (freq === "DAILY") {
+    let dt = new Date(start);
+    for (let i = 0; i < 400; i++) {
+      if (!pushIfValid(dt)) break;
+      if (count && results.length >= count) break;
+      dt.setDate(dt.getDate() + interval);
+    }
+  } else if (freq === "WEEKLY") {
+    const days = byday.length ? byday.map(d => weekdayMap[d]).filter(v => v !== undefined) : [start.getDay()];
+    let weekStart = new Date(start);
+    for (let i = 0; i < 260; i++) {
+      days.forEach(day => {
+        const dt = new Date(weekStart);
+        dt.setDate(weekStart.getDate() + ((day - weekStart.getDay() + 7) % 7));
+        if (dt < start) return;
+        if (untilDate && dt > untilDate) return;
+        results.push(formatDate(dt));
+      });
+      if (count && results.length >= count) break;
+      weekStart.setDate(weekStart.getDate() + 7 * interval);
+      if (untilDate && weekStart > untilDate) break;
+    }
+  } else if (freq === "MONTHLY") {
+    let dt = new Date(start);
+    for (let i = 0; i < 120; i++) {
+      if (!pushIfValid(dt)) break;
+      if (count && results.length >= count) break;
+      dt.setMonth(dt.getMonth() + interval);
+    }
+  } else if (freq === "YEARLY") {
+    let dt = new Date(start);
+    for (let i = 0; i < 50; i++) {
+      if (!pushIfValid(dt)) break;
+      if (count && results.length >= count) break;
+      dt.setFullYear(dt.getFullYear() + interval);
+    }
+  } else {
+    return [startDateStr];
+  }
+
+  return (count ? results.slice(0, count) : results).filter((v, i, a) => a.indexOf(v) === i);
+}
+
+function importFromIcs(text) {
+  const events = text.split("BEGIN:VEVENT").slice(1).map(block => block.split("END:VEVENT")[0]);
+  let imported = 0;
+
+  events.forEach(block => {
+    const get = (k) => { const m = block.match(new RegExp(`${k}[^:]*:(.+)`)); return m ? m[1].trim() : ""; };
+    const dtStartRaw = get("DTSTART");
+    if (!dtStartRaw) return;
+
+    const { date, time: start } = parseIcsDateTime(dtStartRaw);
+    const dtEndRaw = get("DTEND");
+    const end = dtEndRaw ? parseIcsDateTime(dtEndRaw).time : "";
+    const textVal = get("SUMMARY") || "予定";
+    const location = get("LOCATION");
+    const tags = (get("CATEGORIES") || "").split(",").filter(Boolean).map(t => t.startsWith("#") ? t : `#${t}`);
+    const rrule = get("RRULE");
+
+    const dates = rrule ? expandRecurringDates(date, rrule) : [date];
+    dates.forEach(d => {
+      if (!calendarData.events[d]) calendarData.events[d] = [];
+      calendarData.events[d].push({ start, end, text: textVal, location, notify: false, tags });
+      imported++;
+    });
+  });
+
+  saveToLocalStorage();
+  drawCalendar(currentDate);
+  alert(`ICSから ${imported} 件の予定を取り込みました`);
+}
+
+loadJsonInput.addEventListener("change", async () => {
   const file = loadJsonInput.files[0];
   if (!file) return;
-  (async () => {
-    try {
-      const json = JSON.parse(await maybeDecompressText(file));
+
+  try {
+    const text = await file.text();
+    const lower = file.name.toLowerCase();
+
+    if (lower.endsWith(".ics")) {
+      importFromIcs(text);
+    } else {
+      const json = JSON.parse(text);
+      let versionToLoad = null;
 
       if (json.settings && json.settings.app === "todo-list") {
         alert("非対応バージョンのファイルです");
         return;
       }
 
-      let versionToLoad = null;
-
       if (json.version && SUPPORTED_VERSIONS.includes(json.version)) {
-        // 明示的なバージョン指定がある場合
         versionToLoad = json.version;
       } else if (!json.version && json.events && typeof json.events === "object") {
-        // v1.0の形式（versionがなく、eventsオブジェクトが存在する）
         versionToLoad = "1.0";
       }
 
-      if (versionToLoad) {
-        calendarData = convertDataToV4(json);
-        saveToLocalStorage();
-        drawCalendar(currentDate);
-        alert(`バージョン${versionToLoad}のファイルを読み込みました`);
-      } else {
+      if (!versionToLoad) {
         alert("非対応バージョンのファイルです");
+        return;
       }
-    } catch {
-      alert("JSON読み込みに失敗しました");
+
+      calendarData = convertDataToV4(json);
+      saveToLocalStorage();
+      drawCalendar(currentDate);
+      alert(`バージョン${versionToLoad}のファイルを読み込みました`);
     }
-    loadJsonInput.value = "";
-  })();
+  } catch {
+    alert("読み込みに失敗しました");
+  }
+
+  loadJsonInput.value = "";
 });
-
-
-
-// --- 圧縮JSON/ICS ---
-async function maybeDecompressText(file) {
-  if (file.name.endsWith(".gz") && "DecompressionStream" in window) {
-    const stream = file.stream().pipeThrough(new DecompressionStream("gzip"));
-    return await new Response(stream).text();
-  }
-  return await file.text();
-}
-
-async function saveCompressedJson() {
-  const jsonStr = JSON.stringify(calendarData);
-  if (!("CompressionStream" in window)) {
-    alert("このブラウザは gzip 圧縮保存に未対応です。通常保存を利用してください。");
-    return;
-  }
-  const cs = new CompressionStream("gzip");
-  const compressedStream = new Blob([jsonStr], {type:"application/json"}).stream().pipeThrough(cs);
-  const blob = await new Response(compressedStream).blob();
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `Calendar-${CURRENT_SAVE_VERSION}_${new Date().toISOString().replace(/[.:]/g,"-")}.json.gz`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
 
 function formatIcsDateTime(dateStr, timeStr) {
   if (!timeStr) return `${dateStr.replaceAll("-","")}`;
@@ -684,37 +803,16 @@ function exportToIcs() {
   });
   lines.push("END:VCALENDAR");
   const a = document.createElement("a");
+  const now = new Date();
   a.href = URL.createObjectURL(new Blob([lines.join("\r\n")], {type:"text/calendar"}));
-  a.download = `Calendar-${CURRENT_SAVE_VERSION}.ics`;
+  a.download = `Calendar-v5_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.ics`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-function importFromIcs(text) {
-  const events = text.split("BEGIN:VEVENT").slice(1).map(block => block.split("END:VEVENT")[0]);
-  let imported = 0;
-  events.forEach(block => {
-    const get = (k) => { const m = block.match(new RegExp(`${k}[^:]*:(.+)`)); return m ? m[1].trim() : ""; };
-    const dtstart = get("DTSTART");
-    if (!dtstart) return;
-    const date = `${dtstart.slice(0,4)}-${dtstart.slice(4,6)}-${dtstart.slice(6,8)}`;
-    const start = dtstart.includes("T") ? `${dtstart.slice(9,11)}:${dtstart.slice(11,13)}` : "";
-    const dtend = get("DTEND");
-    const end = dtend.includes("T") ? `${dtend.slice(9,11)}:${dtend.slice(11,13)}` : "";
-    const textVal = get("SUMMARY") || "予定";
-    const location = get("LOCATION");
-    const tags = (get("CATEGORIES") || "").split(",").filter(Boolean).map(t => t.startsWith("#") ? t : `#${t}`);
-    if (!calendarData.events[date]) calendarData.events[date] = [];
-    calendarData.events[date].push({start,end,text:textVal,location,notify:false,tags});
-    imported++;
-  });
-  saveToLocalStorage();
-  drawCalendar(currentDate);
-  alert(`ICSから ${imported} 件の予定を取り込みました`);
-}
+exportIcsBtn.addEventListener("click", exportToIcs);
 
 // --- 通知機能 ---
-// 通知権限を確認して取得
 if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
   Notification.requestPermission();
 }
@@ -722,53 +820,44 @@ if ("Notification" in window && Notification.permission !== "granted" && Notific
 notificationCloseBtn.addEventListener("click", () => {
   notificationPopup.style.display = "none";
 });
+
 function showNotificationPopup(title, body) {
   notificationTitle.textContent = title;
   notificationBody.textContent = body;
   notificationPopup.style.display = "block";
 }
 
-// 1秒ごとに予定開始時刻と現在時刻を比較し通知
 function checkNotifications() {
   const canSystemNotification = ("Notification" in window) && Notification.permission === "granted";
-
   const now = new Date();
   const todayStr = formatDate(now);
-  const nowStr = now.toTimeString().slice(0, 8); // "HH:MM:SS"
-
+  const nowStr = now.toTimeString().slice(0, 8);
   const events = calendarData.events[todayStr] || [];
 
   events.forEach(ev => {
     if (!ev.notify || !ev.start) return;
+    const evStart = ev.start.length === 5 ? ev.start + ":00" : ev.start;
+    if (nowStr !== evStart) return;
 
-    // start 時刻を HH:MM:SS 形式に補完
-    let evStart = ev.start.length === 5 ? ev.start + ":00" : ev.start;
+    const key = eventUniqueKey(todayStr, ev.start, ev.text);
+    if (notifiedEvents.has(key)) return;
 
-    if (nowStr === evStart) {
-      const key = eventUniqueKey(todayStr, ev.start, ev.text);
-      if (!notifiedEvents.has(key)) {
-        // 通知タイトルと本文組み立て
-        const title = ev.text || "予定があります";
-        const bodyParts = [];
-        if (ev.start) bodyParts.push(`開始: ${ev.start}`);
-        if (ev.end) bodyParts.push(`終了: ${ev.end}`);
-        if (ev.location) bodyParts.push(`場所: ${ev.location}`);
-        if (ev.tags && ev.tags.length > 0) bodyParts.push(`タグ: ${ev.tags.join(", ")}`);
+    const title = ev.text || "予定があります";
+    const bodyParts = [];
+    if (ev.start) bodyParts.push(`開始: ${ev.start}`);
+    if (ev.end) bodyParts.push(`終了: ${ev.end}`);
+    if (ev.location) bodyParts.push(`場所: ${ev.location}`);
+    if (ev.tags?.length) bodyParts.push(`タグ: ${ev.tags.join(", ")}`);
+    const body = bodyParts.join("\n");
 
-        const body = bodyParts.join("\n");
-
-        if (canSystemNotification) {
-          new Notification(title, { body, icon: "./icon.svg", tag: key, renotify: true, requireInteraction: true });
-        }
-        if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-        showNotificationPopup(title, body);
-
-        notifiedEvents.add(key);
-      }
+    if (canSystemNotification) {
+      new Notification(title, { body, icon: "./icon.svg", tag: key, renotify: true, requireInteraction: true });
     }
+    if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+    showNotificationPopup(title, body);
+    notifiedEvents.add(key);
   });
 
-  // 1分以上経過した通知はリセット
   for (const key of notifiedEvents) {
     const [dateStr, startTime] = key.split("|");
     if (dateStr !== todayStr) {
@@ -777,19 +866,24 @@ function checkNotifications() {
     }
     const [h, m, s] = startTime.split(":").map(Number);
     const eventDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
-    if ((now - eventDateTime) > 60000) {
-      notifiedEvents.delete(key);
-    }
+    if ((now - eventDateTime) > 60000) notifiedEvents.delete(key);
   }
 }
-setInterval(checkNotifications, 1000);
 
+setInterval(checkNotifications, 1000);
 
 // --- 初期処理 ---
 loadFromLocalStorage();
-drawCalendar(currentDate);
+applyInitialQuery();
 
-saveCompressedBtn.addEventListener("click", () => { saveCompressedJson(); });
-importIcsBtn.addEventListener("click", () => importIcsInput.click());
-exportIcsBtn.addEventListener("click", exportToIcs);
-importIcsInput.addEventListener("change", async () => { const file = importIcsInput.files[0]; if (!file) return; importFromIcs(await file.text()); importIcsInput.value = ""; });
+const _openModal = openModal;
+openModal = function(date) {
+  _openModal(date);
+  updateUrlQuery({ year: date.getFullYear(), month: date.getMonth(), day: date.getDate() });
+};
+
+const _closeModal = closeModal;
+closeModal = function() {
+  _closeModal();
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+};
