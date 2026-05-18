@@ -22,7 +22,6 @@
       <button id="settings-btn" aria-haspopup="dialog" aria-controls="settings-modal-bg">設定 ⚙️</button>
       <button id="save-json-btn">保存 💾</button>
       <button id="load-json-btn">読み込み 📂</button>
-      <button id="export-ics-btn">ICS書出 📨</button>
       <input type="file" id="load-json-input" accept="application/json,.json,.ics,text/calendar" aria-label="JSONまたはICSファイルの読み込み" />
     </div>
   </div>
@@ -75,6 +74,14 @@
       <input type="color" id="new-tag-color" value="#4a7c59" aria-label="新しいタグの色" />
       <button id="add-tag-btn">追加</button>
     </div>
+    <hr />
+    <h3>保存形式</h3>
+    <label for="save-format-select">ワンクリック保存形式</label>
+    <select id="save-format-select" aria-label="保存形式">
+      <option value="json">JSON (整形)</option>
+      <option value="ics">ICS</option>
+    </select>
+    <label class="notify-label"><input type="checkbox" id="save-format-lock" /> 設定を固定する</label>
     <button id="settings-cancel-btn">閉じる</button>
   </div>
 </div>

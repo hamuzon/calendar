@@ -34,7 +34,8 @@ const settingsCancelBtn = document.getElementById("settings-cancel-btn");
 const saveJsonBtn = document.getElementById("save-json-btn");
 const loadJsonBtn = document.getElementById("load-json-btn");
 const loadJsonInput = document.getElementById("load-json-input");
-const exportIcsBtn = document.getElementById("export-ics-btn");
+const saveFormatSelect = document.getElementById("save-format-select");
+const saveFormatLock = document.getElementById("save-format-lock");
 
 // 通知ポップアップ要素
 const notificationPopup = document.getElementById("notification-popup");
@@ -53,6 +54,10 @@ let calendarData = {
     "#仕事": "#4a7c59",
     "#プライベート": "#d27c7c",
     "#重要": "#7c4a7c"
+  },
+  settings: {
+    saveFormat: "json",
+    lockSaveFormat: false
   }
 };
 
@@ -86,6 +91,7 @@ function loadFromLocalStorage() {
     try {
       const data = JSON.parse(stored);
       calendarData = convertDataToV4(data);
+      calendarData.settings = calendarData.settings || { saveFormat: "json", lockSaveFormat: false };
     } catch {}
   }
 }
@@ -136,9 +142,10 @@ function convertV1toV4(data) {
     }
   }
   return {
-    version: "4.0",
+    version: CURRENT_SAVE_VERSION,
     events: convertedEvents,
-    tagColors: data.settings?.tagColors || {}
+    tagColors: data.settings?.tagColors || {},
+    settings: { saveFormat: "json", lockSaveFormat: false }
   };
 }
 
@@ -166,9 +173,10 @@ function convertV2toV4(data) {
     });
   }
   return {
-    version: "4.0",
+    version: CURRENT_SAVE_VERSION,
     events: convertedEvents,
-    tagColors: data.tagColors || {}
+    tagColors: data.tagColors || {},
+    settings: { saveFormat: "json", lockSaveFormat: false }
   };
 }
 
@@ -196,9 +204,10 @@ function convertV3toV4(data) {
     });
   }
   return {
-    version: "4.0",
+    version: CURRENT_SAVE_VERSION,
     events: convertedEvents,
-    tagColors: data.tagColors || {}
+    tagColors: data.tagColors || {},
+    settings: { saveFormat: "json", lockSaveFormat: false }
   };
 }
 
@@ -607,210 +616,34 @@ function applyInitialQuery() {
   }
 }
 
-// --- JSON保存・読み込み ---
-saveJsonBtn.addEventListener("click", () => {
-  const jsonStr = JSON.stringify(calendarData);
-  const blob = new Blob([jsonStr], {type: "application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = pad(now.getMonth() + 1);
-  const d = pad(now.getDate());
-  const h = pad(now.getHours());
-  const min = pad(now.getMinutes());
-  const sec = pad(now.getSeconds());
-  a.download = `Calendar-v5_${y}-${m}-${d}_${h}-${min}-${sec}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
 
-loadJsonBtn.addEventListener("click", () => {
-  loadJsonInput.click();
-});
-
-function parseIcsDateTime(value) {
-  const raw = value.replace(/Z$/, "");
-  const date = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
-  const time = raw.includes("T") ? `${raw.slice(9,11)}:${raw.slice(11,13)}` : "";
-  return { date, time };
+function escapeIcsText(text) {
+  return (text || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
 }
 
-function parseRRule(ruleText) {
-  const out = {};
-  ruleText.split(";").forEach(part => {
-    const [k, v] = part.split("=");
-    if (k && v) out[k] = v;
-  });
+function unescapeIcsText(text) {
+  return (text || "")
+    .replace(/\\n/g, "\n")
+    .replace(/\\,/g, ",")
+    .replace(/\\;/g, ";")
+    .replace(/\\\\/g, "\\");
+}
+
+function foldIcsLine(line) {
+  const max = 75;
+  if (line.length <= max) return line;
+  let out = line.slice(0, max);
+  let rest = line.slice(max);
+  while (rest.length) {
+    out += "\r\n " + rest.slice(0, max - 1);
+    rest = rest.slice(max - 1);
+  }
   return out;
 }
-
-function expandRecurringDates(startDateStr, rruleText) {
-  const rule = parseRRule(rruleText || "");
-  const freq = rule.FREQ;
-  if (!freq) return [startDateStr];
-
-  const interval = Number(rule.INTERVAL || "1") || 1;
-  const count = Number(rule.COUNT || "0") || 0;
-  const untilRaw = rule.UNTIL || "";
-  const untilDate = untilRaw ? new Date(untilRaw.slice(0,4), Number(untilRaw.slice(4,6)) - 1, Number(untilRaw.slice(6,8))) : null;
-  const byday = (rule.BYDAY || "").split(",").filter(Boolean);
-  const start = new Date(startDateStr + "T00:00:00");
-
-  const weekdayMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
-  const results = [];
-
-  const pushIfValid = (dt) => {
-    if (untilDate && dt > untilDate) return false;
-    results.push(formatDate(dt));
-    return true;
-  };
-
-  if (freq === "DAILY") {
-    let dt = new Date(start);
-    for (let i = 0; i < 400; i++) {
-      if (!pushIfValid(dt)) break;
-      if (count && results.length >= count) break;
-      dt.setDate(dt.getDate() + interval);
-    }
-  } else if (freq === "WEEKLY") {
-    const days = byday.length ? byday.map(d => weekdayMap[d]).filter(v => v !== undefined) : [start.getDay()];
-    let weekStart = new Date(start);
-    for (let i = 0; i < 260; i++) {
-      days.forEach(day => {
-        const dt = new Date(weekStart);
-        dt.setDate(weekStart.getDate() + ((day - weekStart.getDay() + 7) % 7));
-        if (dt < start) return;
-        if (untilDate && dt > untilDate) return;
-        results.push(formatDate(dt));
-      });
-      if (count && results.length >= count) break;
-      weekStart.setDate(weekStart.getDate() + 7 * interval);
-      if (untilDate && weekStart > untilDate) break;
-    }
-  } else if (freq === "MONTHLY") {
-    let dt = new Date(start);
-    for (let i = 0; i < 120; i++) {
-      if (!pushIfValid(dt)) break;
-      if (count && results.length >= count) break;
-      dt.setMonth(dt.getMonth() + interval);
-    }
-  } else if (freq === "YEARLY") {
-    let dt = new Date(start);
-    for (let i = 0; i < 50; i++) {
-      if (!pushIfValid(dt)) break;
-      if (count && results.length >= count) break;
-      dt.setFullYear(dt.getFullYear() + interval);
-    }
-  } else {
-    return [startDateStr];
-  }
-
-  return (count ? results.slice(0, count) : results).filter((v, i, a) => a.indexOf(v) === i);
-}
-
-function importFromIcs(text) {
-  const events = text.split("BEGIN:VEVENT").slice(1).map(block => block.split("END:VEVENT")[0]);
-  let imported = 0;
-
-  events.forEach(block => {
-    const get = (k) => { const m = block.match(new RegExp(`${k}[^:]*:(.+)`)); return m ? m[1].trim() : ""; };
-    const dtStartRaw = get("DTSTART");
-    if (!dtStartRaw) return;
-
-    const { date, time: start } = parseIcsDateTime(dtStartRaw);
-    const dtEndRaw = get("DTEND");
-    const end = dtEndRaw ? parseIcsDateTime(dtEndRaw).time : "";
-    const textVal = get("SUMMARY") || "予定";
-    const location = get("LOCATION");
-    const tags = (get("CATEGORIES") || "").split(",").filter(Boolean).map(t => t.startsWith("#") ? t : `#${t}`);
-    const rrule = get("RRULE");
-
-    const dates = rrule ? expandRecurringDates(date, rrule) : [date];
-    dates.forEach(d => {
-      if (!calendarData.events[d]) calendarData.events[d] = [];
-      calendarData.events[d].push({ start, end, text: textVal, location, notify: false, tags });
-      imported++;
-    });
-  });
-
-  saveToLocalStorage();
-  drawCalendar(currentDate);
-  alert(`ICSから ${imported} 件の予定を取り込みました`);
-}
-
-loadJsonInput.addEventListener("change", async () => {
-  const file = loadJsonInput.files[0];
-  if (!file) return;
-
-  try {
-    const text = await file.text();
-    const lower = file.name.toLowerCase();
-
-    if (lower.endsWith(".ics")) {
-      importFromIcs(text);
-    } else {
-      const json = JSON.parse(text);
-      let versionToLoad = null;
-
-      if (json.settings && json.settings.app === "todo-list") {
-        alert("非対応バージョンのファイルです");
-        return;
-      }
-
-      if (json.version && SUPPORTED_VERSIONS.includes(json.version)) {
-        versionToLoad = json.version;
-      } else if (!json.version && json.events && typeof json.events === "object") {
-        versionToLoad = "1.0";
-      }
-
-      if (!versionToLoad) {
-        alert("非対応バージョンのファイルです");
-        return;
-      }
-
-      calendarData = convertDataToV4(json);
-      saveToLocalStorage();
-      drawCalendar(currentDate);
-      alert(`バージョン${versionToLoad}のファイルを読み込みました`);
-    }
-  } catch {
-    alert("読み込みに失敗しました");
-  }
-
-  loadJsonInput.value = "";
-});
-
-function formatIcsDateTime(dateStr, timeStr) {
-  if (!timeStr) return `${dateStr.replaceAll("-","")}`;
-  return `${dateStr.replaceAll("-","")}T${timeStr.replace(":","")}00`;
-}
-
-function exportToIcs() {
-  const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Calendar v5.0-beta//JP","CALSCALE:GREGORIAN"];
-  Object.entries(calendarData.events).forEach(([date, evs]) => {
-    evs.forEach((ev, idx) => {
-      lines.push("BEGIN:VEVENT");
-      lines.push(`UID:${date}-${idx}-${(ev.text||"event").replace(/\s+/g,"")}`);
-      lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,"").split(".")[0]}Z`);
-      lines.push(`DTSTART:${formatIcsDateTime(date, ev.start)}`);
-      if (ev.end) lines.push(`DTEND:${formatIcsDateTime(date, ev.end)}`);
-      lines.push(`SUMMARY:${(ev.text || "予定").replace(/\n/g," ")}`);
-      if (ev.location) lines.push(`LOCATION:${ev.location.replace(/\n/g," ")}`);
-      if (ev.tags?.length) lines.push(`CATEGORIES:${ev.tags.join(",")}`);
-      lines.push("END:VEVENT");
-    });
-  });
-  lines.push("END:VCALENDAR");
-  const a = document.createElement("a");
-  const now = new Date();
-  a.href = URL.createObjectURL(new Blob([lines.join("\r\n")], {type:"text/calendar"}));
-  a.download = `Calendar-v5_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.ics`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-exportIcsBtn.addEventListener("click", exportToIcs);
 
 // --- 通知機能 ---
 if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
@@ -887,3 +720,12 @@ closeModal = function() {
   _closeModal();
   updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
 };
+
+
+if (saveFormatSelect && saveFormatLock) {
+  const st = calendarData.settings || { saveFormat: "json", lockSaveFormat: false };
+  saveFormatSelect.value = st.saveFormat || "json";
+  saveFormatLock.checked = !!st.lockSaveFormat;
+  saveFormatSelect.addEventListener("change", () => { calendarData.settings = calendarData.settings || {}; calendarData.settings.saveFormat = saveFormatSelect.value; if (saveFormatLock.checked) saveToLocalStorage(); });
+  saveFormatLock.addEventListener("change", () => { calendarData.settings = calendarData.settings || {}; calendarData.settings.lockSaveFormat = saveFormatLock.checked; calendarData.settings.saveFormat = saveFormatSelect.value; saveToLocalStorage(); });
+}
