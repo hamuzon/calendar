@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calendar Version Selector</title>
-  <meta name="description" content="Calendarのバージョン選択機能ページ。v1.0、v2.0、v3.0、v4.0の違いを説明し、JSONファイルの命名規則や注意事項を日本語と英語で案内します。" />
+  <meta name="description"
+    content="Calendarのバージョン選択機能ページ。v1.0、v2.0、v3.0、v4.0の違いを説明し、JSONファイルの命名規則や注意事項を日本語と英語で案内します。" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400&display=swap" rel="stylesheet" />
   <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
   <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
@@ -17,6 +19,7 @@
       --notice: #d38c4a;
       --focus-outline: #c5b38f;
     }
+
     @media (prefers-color-scheme: light) {
       :root {
         --bg: #f7f3e9;
@@ -65,8 +68,9 @@
       margin: 0 auto 1.8rem;
       display: inline-block;
       transition: background-color 0.3s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     }
+
     .lang-switch:hover,
     .lang-switch:focus {
       background: var(--button-hover);
@@ -106,18 +110,19 @@
       border-radius: 10px;
       font-size: clamp(1.05rem, 3vw, 1.25rem);
       font-weight: 700;
-      box-shadow: 0 4px 9px rgba(0,0,0,0.55);
+      box-shadow: 0 4px 9px rgba(0, 0, 0, 0.55);
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
       -webkit-user-select: none;
       user-select: none;
       display: block;
     }
+
     a.version-btn:hover,
     a.version-btn:focus {
       background: var(--button-hover);
       outline: 3px solid var(--focus-outline);
       outline-offset: 2px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.75);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.75);
     }
 
     section {
@@ -150,7 +155,7 @@
     }
 
     code {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       padding: 0.25em 0.45em;
       border-radius: 5px;
       font-family: monospace;
@@ -163,9 +168,11 @@
     }
   </style>
 </head>
+
 <body>
   <div id="container">
-    <button class="lang-switch" aria-pressed="false" aria-label="言語切替 日本語・English" onclick="toggleLang()">🌐 English</button>
+    <button class="lang-switch" aria-pressed="false" aria-label="言語切替 日本語・English" onclick="toggleLang()">🌐
+      English</button>
 
     <!-- 日本語 -->
     <div id="lang-ja" lang="ja">
@@ -176,6 +183,7 @@
         <a class="version-btn" href="v2.0/index.html">🗓️ v2.0 🕰️</a>
         <a class="version-btn" href="v3.0/index.html">🗓️ v3.0 ✏️</a>
         <a class="version-btn" href="v4.0/index.html">🗓️ v4.0 📒</a>
+        <!-- <a class="version-btn" href="v5.0/index.html">🗓️ v5.0 📝</a> -->
       </div>
 
       <section>
@@ -197,10 +205,17 @@
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json</code></p>
         <p><code>例: Calendar-4.0_2025-07-10_18-30-15.json</code></p>
 
+        <!--
+        <h3>v5.0 のファイル名</h3>
+        <p><code>Calendar-5.0_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json / .ics</code></p>
+        <p><code>例: Calendar-5.0_2025-10-27_10-00-00.json</code></p>
+        -->
+
         <p>
           v1.0、v2.0、v3.0、v4.0 では、ファイル名や JSON の形式が異なります。<br />
           v3.0 は v2.0 の JSON 形式と互換性があります。<br />
-          v4.0 は v1.0 ～ v4.0 の JSON 形式に対応しており、通知時間に簡易警告を表示します。
+          v4.0 は v1.0 ～ v4.0 の JSON 形式に対応しており、通知時間に簡易警告を表示します。<br />
+          <!-- v5.0 は v1.0 ～ v4.0 の JSON 形式に対応。内部構造を最適化し、検索機能やフィルタリング、他アップデート。 -->
         </p>
       </section>
     </div>
@@ -214,6 +229,7 @@
         <a class="version-btn" href="v2.0/index.html">🗓️ v2.0 🕰️</a>
         <a class="version-btn" href="v3.0/index.html">🗓️ v3.0 ✏️</a>
         <a class="version-btn" href="v4.0/index.html">🗓️ v4.0 📒</a>
+        <!-- <a class="version-btn" href="v5.0/index.html">🗓️ v5.0 📝</a> -->
       </div>
 
       <section>
@@ -235,10 +251,17 @@
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json</code></p>
         <p><code>Example: Calendar-4.0_2025-07-10_18-30-15.json</code></p>
 
+        <!--
+        <h3>v5.0 format</h3>
+        <p><code>Calendar-5.0_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json / .ics</code></p>
+        <p><code>Example: Calendar-5.0_2025-10-27_10-00-00.json</code></p>
+        -->
+
         <p>
           The filenames and JSON formats differ between v1.0, v2.0, v3.0, and v4.0.<br />
           v3.0 is backward compatible with the JSON format of v2.0.<br />
-          v4.0 supports JSON formats from v1.0 to v4.0 and will display a simple warning at the notification time.
+          v4.0 supports JSON formats from v1.0 to v4.0.<br />
+          <!-- v5.0 supports older formats, featuring an optimized data structure, event searching, tag filtering, and indented JSON export. -->
         </p>
       </section>
     </div>
@@ -278,4 +301,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -3,20 +3,20 @@
 ## 📖 概要 / Overview
 
 このカレンダーアプリは、**シンプルで直感的に使えるウェブベースのカレンダー**です。  
-月単位で表示され、**1日に複数の予定を追加・管理**できます。(v2.0〜)
-予定には**開始時間・終了時間**を設定でき、**タグによる分類・色分け**も可能です。
+月単位で表示され、**1日に複数の予定を追加・管理**できます。  
+予定には**開始時間・終了時間**を設定でき、**タグによる分類・色分け**も可能です。  
 
 ユーザーの設定や予定はブラウザの `localStorage` に保存され、再訪時にも状態が保持されます。  
-予定データは**JSON形式で保存・読み込み**できるため、バックアップや環境間の移行も容易です。
+予定データは**JSON形式で保存・読み込み**できるため、バックアップや環境間の移行も容易です。  
 
 ---
 
-This calendar app is a **simple and intuitive web-based calendar**.  
-It displays a monthly view and allows users to **add and manage multiple events per day**.  
-Each event can have **start and end times**, and can be **tagged and color-coded**.
+This calendar app is a **simple, intuitive, and modern web-based calendar**.  
+Featuring a monthly view, it allows users to **seamlessly add, edit, and organize multiple events per day**.  
+Each event supports **start and end times**, **location tags**, and **customizable color-coding**.  
 
-User settings and events are stored in the browser’s `localStorage`, so the state is preserved on revisit.  
-All data can be **saved and loaded in JSON format**, making backups and migration easy.
+User settings and events are safely stored in the browser’s `localStorage`, ensuring your data is instantly loaded on return.  
+All data can be **saved and loaded in JSON format**, making backups and migration easy.  
 
 ---
 
@@ -57,7 +57,7 @@ All data can be **saved and loaded in JSON format**, making backups and migratio
 ## 🌐 オンライン版 / Online Version
 
 このアプリは以下のURLからオンラインで利用できます：  
-📎 [https://hamuzon.github.io/calendar/](https://hamuzon.github.io/calendar/)
+📎 [hamuzon.github.io/calendar/](https://hamuzon.github.io/calendar/)
 
 アクセスすると、バージョン「v1.0」「v2.0」「v3.0」「v4.0」の選択画面が表示されます。  
 それぞれのUIや機能の違いを確認して使用できます。
@@ -65,9 +65,9 @@ All data can be **saved and loaded in JSON format**, making backups and migratio
 ---
 
 This app is available online at:  
-📎 [https://hamuzon.github.io/calendar/](https://hamuzon.github.io/calendar/)
+📎 [hamuzon.github.io/calendar/](https://hamuzon.github.io/calendar/)
 
-When you access the site, a selection screen for versions "v1.0", "v2.0", "v3.0", and "v4.0" will be displayed.
+When you access the site, a selection screen for versions "v1.0", "v2.0", "v3.0", and "v4.0" will be displayed.  
 
 You can compare and use the different UI and features of each version.
 

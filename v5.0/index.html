@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calendar v5.0 📝</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="icon.svg" />
+</head>
+<body>
+<header>
+  <h1>📅 Calendar app <span class="version-badge">v5.0</span> 📝</h1>
+
+  <div class="nav-buttons">
+    <div class="nav-group main-nav">
+      <button id="prev-month" aria-label="前の月">◀ 前月</button>
+      <span id="month-year" aria-live="polite" aria-atomic="true"></span>
+      <button id="next-month" aria-label="次の月">翌月 ▶</button>
+    </div>
+    <div class="nav-group extra-nav">
+      <button id="today-button">今日</button>
+      <button id="search-open-btn" class="search-btn" title="検索">🔍</button>
+      <button id="settings-btn" aria-haspopup="dialog" aria-controls="settings-modal-bg">設定 ⚙️</button>
+      <button id="save-json-btn">保存 💾</button>
+      <button id="load-json-btn">読み込み 📂</button>
+      <input type="file" id="load-json-input" accept="application/json,.json,.ics,text/calendar" aria-label="JSONまたはICSファイルの読み込み" />
+    </div>
+  </div>
+</header>
+
+<div id="filter-status-banner" class="filter-status-banner">
+  <span id="filter-status-text"></span>
+  <button id="filter-clear-btn" class="filter-clear-btn">クリア / Clear ×</button>
+</div>
+
+<div id="calendar-container">
+  <table id="calendar" aria-label="カレンダー">
+    <thead>
+      <tr>
+        <th class="sunday">日</th>
+        <th>月</th>
+        <th>火</th>
+        <th>水</th>
+        <th>木</th>
+        <th>金</th>
+        <th class="saturday">土</th>
+      </tr>
+    </thead>
+    <tbody id="calendar-body"></tbody>
+  </table>
+</div>
+
+<!-- 予定追加・編集モーダル -->
+<div id="modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-date">
+  <div class="modal">
+    <h2 id="modal-date">日付</h2>
+    <div id="event-list" class="event-list" aria-live="polite" aria-atomic="true"></div>
+    <div class="event-inputs">
+      <label for="new-event-start">開始時刻：</label><input type="time" id="new-event-start" />
+      <label for="new-event-end">終了時刻：</label><input type="time" id="new-event-end" />
+      <label for="new-event-text">内容：</label><input type="text" id="new-event-text" placeholder="予定内容" />
+      <label for="new-event-tags">タグ：</label><input type="text" id="new-event-tags" placeholder="#タグはスペースかカンマ区切り" />
+      <label for="new-event-location">場所：</label><input type="text" id="new-event-location" placeholder="場所" />
+      <label class="notify-label"><input type="checkbox" id="new-event-notify" /> 通知</label>
+    </div>
+    <div class="modal-buttons">
+      <button id="add-event-btn">追加 / Add</button>
+      <button id="close-btn">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 検索・フィルタモーダル -->
+<div id="search-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="search-title">
+  <div class="modal">
+    <h2 id="search-title">予定の検索とフィルタ 🔍</h2>
+    <section class="filter-section-modal">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="キーワードを入力..." oninput="render()"> <!-- render() を呼び出す -->
+      </div>
+      <div class="tag-filters">
+        <span>対象タグの選択:</span>
+        <div id="tag-checkboxes"></div>
+      </div>
+    </section>
+    <button id="search-close-btn" class="modal-close-btn">閉じる</button>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
+<div id="settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+  <div class="modal">
+    <h2 id="settings-title">設定（検索・表示）</h2>
+    <div class="settings-grid">
+      <div>
+        <label for="theme-select">テーマ</label>
+        <select id="theme-select" aria-label="テーマ設定">
+          <option value="auto">自動（OS連動）</option>
+          <option value="light">ライト</option>
+          <option value="dark">ダーク</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label for="search-toggle-setting">検索機能(🔍)</label>
+        <select id="search-toggle-setting">
+          <option value="off">OFF</option>
+          <option value="on">ON</option>
+        </select>
+      </div>
+    </div>
+    <hr />
+    <button id="open-tag-settings-btn" type="button">タグ設定を開く</button>
+    <hr />
+    <div class="save-options">
+      <h3>保存形式</h3>
+      <label for="save-format-select">ワンクリック保存形式</label>
+      <select id="save-format-select" aria-label="保存形式">
+        <option value="json">JSON</option>
+        <option value="ics">ICS</option>
+      </select>
+      <label class="notify-label"><input type="checkbox" id="save-format-lock" /> 設定を固定する</label>
+    </div>
+    <hr />
+    <div class="danger-zone">
+      <h3>データ管理</h3>
+      <button onclick="confirmReset()" class="btn-danger">データの初期化 ⚠️</button>
+    </div>
+    <button id="settings-cancel-btn">閉じる</button>
+  </div>
+</div>
+
+<div id="tag-settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="tag-settings-title">
+  <div class="modal">
+    <h2 id="tag-settings-title">タグ設定</h2>
+    <div id="tag-color-list" class="tag-color-list"></div>
+    <div class="tag-add">
+      <input type="text" id="new-tag-name" placeholder="#タグ名" aria-label="新しいタグ名" />
+      <input type="color" id="new-tag-color" value="#4a7c59" aria-label="新しいタグの色" />
+      <button id="add-tag-btn">追加</button>
+    </div>
+    <button id="tag-settings-close-btn" type="button">閉じる</button>
+  </div>
+</div>
+
+<!-- 通知ポップアップ（画面内表示用） -->
+<div id="notification-popup" class="notification-popup" aria-live="assertive" aria-atomic="true">
+  <div class="notification-content">
+    <button id="notification-close-btn" aria-label="通知を閉じる">×</button>
+    <strong id="notification-title"></strong>
+    <p id="notification-body"></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
