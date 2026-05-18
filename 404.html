@@ -96,6 +96,12 @@
       const path = window.location.pathname.toLowerCase();
       if (path.includes('readme') || path.includes('license')) {
         window.location.replace('./');
+        return;
+      }
+      // v5.0-betaへのアクセスを判定してv5.0へ自動リダイレクト
+      if (path.includes('v5.0-beta')) {
+        const newPath = window.location.pathname.replace(/v5.0-beta/i, 'v5.0');
+        window.location.replace(newPath + window.location.search + window.location.hash);
       }
     })();
 
