@@ -770,3 +770,12 @@ if (themeSelect && contrastSelect) {
     saveToLocalStorage();
   });
 }
+
+if (window.matchMedia) {
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const syncAutoTheme = () => {
+    if ((calendarData.settings?.theme || "auto") === "auto") applyAppearanceSettings();
+  };
+  if (darkQuery.addEventListener) darkQuery.addEventListener("change", syncAutoTheme);
+  else if (darkQuery.addListener) darkQuery.addListener(syncAutoTheme);
+}
