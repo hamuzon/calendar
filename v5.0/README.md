@@ -20,8 +20,8 @@
   カレンダーテーブルの `min-width` を撤廃し、モバイル（320px〜）に完全追従しました。  
   スマホ表示の時はセルの高さを最適化し、予定のタグや場所を一時的に隠して `...` で綺麗に自動トリミング（ellipsis）することで、スクロールのないすっきりしたモバイル画面を実現しました。
 
-- ⚙️ **クエリパラメータ同期**  
-  `?q=キーワード&tags=#仕事` のように、検索しているクエリや選択したタグもリアルタイムでURLと双方向同期されます。
+- ⚙️ **クエリパラメータ同期 & ダイレクトリンク対応**  
+  `?y=2026&m=6&d=18` などのパラメータによって、特定の年月日にダイレクトリンクすることが可能になりました。また、`?q=キーワード&tags=#仕事` のように、検索しているクエリや選択したタグもリアルタイムでURLと双方向同期されます。
 
 ---
 
@@ -43,5 +43,6 @@
   Fluid layout with no horizontal scroll down to 320px.  
   On small screens, monthly cells automatically hide tags/locations and use `text-overflow: ellipsis` for a clean, professional grid.
 
-- ⚙️ **URL Query Parameter Sync**  
-  Fully syncs the active search query `q` and selected tags `tags` with the browser URL.
+- ⚙️ **URL Query Parameter Sync & Direct Linking**  
+  Supports direct linking to any specific year, month, or day via URL query parameters like `?y=2026&m=6&d=18`. It also fully syncs the active search query `q` and selected tags `tags` with the browser URL.
+
