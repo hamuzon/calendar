@@ -14,6 +14,32 @@ body {
   flex-direction: column;
   align-items: center;
 }
+body.theme-dark {
+  background-color: #14171d;
+  color: #e8edf3;
+}
+body.theme-dark #calendar-container,
+body.theme-dark .modal {
+  background: #1d2430;
+  color: #e8edf3;
+}
+body.theme-dark #calendar th,
+body.theme-dark #calendar td {
+  border-color: #3b465a;
+}
+body.theme-dark #calendar th {
+  background-color: #2b5a8a;
+}
+body.theme-dark .adjacent-month {
+  background-color: #242d3a;
+  color: #8fa0bb;
+}
+body.theme-dark .event {
+  background-color: #2c3f57;
+}
+body.contrast-universal .sunday { color: #d1495b; }
+body.contrast-universal .saturday { color: #2f67d8; }
+body.contrast-universal .event { background-color: #dff3ff; color: #0f1b2d; }
 
 /* ================= ヘッダー ================= */
 header {
@@ -158,8 +184,9 @@ header h1 {
 
 #calendar {
   border-collapse: collapse;
-  width: 700px;
+  width: 100%;
   min-width: 700px;
+  table-layout: fixed;
 }
 
 #calendar th,
@@ -429,6 +456,15 @@ td > div:first-child {
 
 .tag-add button:hover {
   background-color: #3d6646;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.settings-grid label,
+.settings-grid select {
+  width: 100%;
 }
 
 /* 初期状態の非表示設定 */

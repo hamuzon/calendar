@@ -67,7 +67,26 @@
 <!-- タグカラー設定モーダル -->
 <div id="settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="modal">
-    <h2 id="settings-title">タグカラー設定</h2>
+    <h2 id="settings-title">設定（表示・保存・タグ）</h2>
+    <div class="settings-grid">
+      <div>
+        <label for="theme-select">テーマ</label>
+        <select id="theme-select" aria-label="テーマ設定">
+          <option value="auto">自動（OS連動）</option>
+          <option value="light">ライト</option>
+          <option value="dark">ダーク</option>
+        </select>
+      </div>
+      <div>
+        <label for="contrast-select">配色</label>
+        <select id="contrast-select" aria-label="配色設定">
+          <option value="standard">標準</option>
+          <option value="universal">ユニバーサルカラー</option>
+        </select>
+      </div>
+    </div>
+    <hr />
+    <h3>タグカラー設定</h3>
     <div id="tag-color-list" class="tag-color-list"></div>
     <div class="tag-add">
       <input type="text" id="new-tag-name" placeholder="#タグ名" aria-label="新しいタグ名" />
