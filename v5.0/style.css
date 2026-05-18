@@ -196,7 +196,6 @@ header h1 {
 #calendar {
   border-collapse: collapse;
   width: 100%;
-  min-width: 700px;
   table-layout: fixed;
 }
 
@@ -532,9 +531,13 @@ select {
 
 /* ================= レスポンシブ（スマホ対応） ================= */
 @media (max-width: 600px) {
+  body {
+    padding: 6px 10px;
+  }
+
   /* カレンダー全体パディングをやや狭く */
   #calendar {
-    padding: 8px;
+    padding: 4px;
     width: 100% !important;
     min-width: 100% !important;
   }
@@ -542,9 +545,9 @@ select {
   /* カレンダーテーブルのフォントサイズとセルサイズ縮小 */
   #calendar th,
   #calendar td {
-    font-size: 12px;
-    height: 60px;
-    padding: 4px;
+    font-size: 11px;
+    height: 55px;
+    padding: 2px;
   }
 
   /* 月年表示のフォントサイズを縮小 */
@@ -567,8 +570,25 @@ select {
   /* モーダルの幅とパディング調整 */
   .modal {
     max-width: 100%;
-    height: 90vh;
+    height: auto;
+    max-height: 90vh;
     padding: 16px 20px;
+  }
+
+  /* モバイルグリッド上でのイベント詳細の非表示とトリミング */
+  .event-tag,
+  .event-location,
+  .event-notify {
+    display: none !important;
+  }
+  .event {
+    display: block !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    padding: 2px 4px;
+    margin-bottom: 2px;
   }
 }
 
@@ -660,3 +680,135 @@ body.theme-dark .event-location {
     font-weight: 700;
   }
 }
+
+/* ================= フィルタステータスバー ================= */
+.filter-status-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 720px;
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--danger-text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+body.theme-dark .filter-status-banner {
+  background-color: #2b1f1f;
+  border-color: #5a3b3b;
+  color: #ffb3b3;
+}
+.filter-status-text {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+.filter-pill-search {
+  background-color: var(--header);
+}
+.filter-pill-tag {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25), 0 1px 3px rgba(0,0,0,0.1);
+}
+.filter-pill-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  transition: background-color 0.2s ease;
+  margin-left: 2px;
+}
+.filter-pill-close:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.filter-clear-btn {
+  background: var(--danger-text);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+.filter-clear-btn:hover {
+  filter: brightness(1.1);
+}
+body.theme-dark .filter-clear-btn {
+  background: #d15656;
+}
+
+/* ================= 検索モーダル内タグ選択 ================= */
+.tag-filters {
+  margin-top: 15px;
+}
+.tag-filters > span {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+#tag-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.tag-select-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  background-color: var(--muted-panel);
+  transition: all 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.tag-select-row:hover {
+  border-color: var(--btn-hover);
+  background-color: var(--bg);
+}
+.tag-select-row.is-active {
+  border-color: var(--btn-hover);
+  background-color: var(--btn-hover);
+  color: #fff;
+}
+.tag-select-row.is-active .event-tag {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
+}
+.tag-select-icon {
+  font-size: 14px;
+}
+

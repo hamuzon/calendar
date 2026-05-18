@@ -19,6 +19,7 @@ let calendarData = {
   config: {
     theme: "auto",
     hiddenCategories: [],
+    selectedTags: [],
     searchEnabled: false,
     saveFormat: "json",
     searchQuery: ""
@@ -273,6 +274,7 @@ function drawCalendar(date) {
   monthYear.textContent = `${year}年 ${month + 1}月`;
   
   if (searchModalBg.style.display === "flex") renderFilters(); // フィルタ表示中のみ更新
+  updateFilterStatusBanner();
 
   const firstDay = new Date(year, month, 1);
   const firstWeekday = firstDay.getDay();
@@ -322,8 +324,10 @@ function drawCalendar(date) {
       // 検索とタグフィルタリングの適用
       const evList = rawEvList.filter(ev => {
         const matchesSearch = ev.text.toLowerCase().includes(searchQuery);
-        const isNotHidden = !ev.tags || ev.tags.every(tag => !calendarData.config.hiddenCategories.includes(tag));
-        return matchesSearch && isNotHidden;
+        const selectedTags = calendarData.config.selectedTags || [];
+        const hasSelectedTag = selectedTags.length === 0 || 
+                               (ev.tags && ev.tags.some(tag => selectedTags.includes(tag)));
+        return matchesSearch && hasSelectedTag;
       });
 
       evList.forEach(ev => {
@@ -403,14 +407,15 @@ closeBtn.addEventListener("click", closeModal);
 // --- フィルターUIの生成 ---
 function renderFilters() { // 検索モーダル内のタグフィルタUIを生成
   const tagContainer = document.getElementById("tag-checkboxes");
-  if (!tagContainer) return; // searchModalBg.style.display === "flex" は呼び出し元で制御
+  if (!tagContainer) return;
   
   const tags = Object.keys(calendarData.content.tagColors);
+  const selectedTags = calendarData.config.selectedTags || [];
   tagContainer.innerHTML = tags.map(tag => `
-    <div class="tag-select-row ${calendarData.config.hiddenCategories.includes(tag) ? 'is-inactive' : 'is-active'}" 
+    <div class="tag-select-row ${selectedTags.includes(tag) ? 'is-active' : 'is-inactive'}" 
          onclick="toggleTagFilter('${tag}')">
       <span class="tag-select-icon">
-        ${calendarData.config.hiddenCategories.includes(tag) ? '○' : '●'}
+        ${selectedTags.includes(tag) ? '●' : '○'}
       </span>
       <span class="event-tag" style="background-color: ${calendarData.content.tagColors[tag] || '#777'};">
         ${tag}
@@ -420,14 +425,16 @@ function renderFilters() { // 検索モーダル内のタグフィルタUIを生
 }
 
 window.toggleTagFilter = function(tag) {
-  const hidden = calendarData.config.hiddenCategories;
-  if (hidden.includes(tag)) {
-    calendarData.config.hiddenCategories = hidden.filter(t => t !== tag);
+  if (!calendarData.config.selectedTags) calendarData.config.selectedTags = [];
+  const selected = calendarData.config.selectedTags;
+  if (selected.includes(tag)) {
+    calendarData.config.selectedTags = selected.filter(t => t !== tag);
   } else {
-    hidden.push(tag);
+    calendarData.config.selectedTags.push(tag);
   }
   saveToLocalStorage();
-  render(); // タグフィルタ変更後もカレンダーを再描画
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+  drawCalendar(currentDate);
 };
 
 function updateEventList() {
@@ -699,6 +706,12 @@ function updateUrlQuery({year, month, day = null}) {
   params.set("y", String(year));
   params.set("m", String(month + 1));
   if (day !== null) params.set("d", String(day));
+  if (calendarData.config.searchQuery) {
+    params.set("q", calendarData.config.searchQuery);
+  }
+  if (calendarData.config.selectedTags && calendarData.config.selectedTags.length > 0) {
+    params.set("tags", calendarData.config.selectedTags.join(","));
+  }
   history.replaceState(null, "", `?${params.toString()}`);
 }
 
@@ -725,6 +738,19 @@ function applyInitialQuery() {
   if (Number.isInteger(y) && Number.isInteger(m) && m >= 1 && m <= 12) {
     currentDate = new Date(y, m - 1, 1);
     currentDate.setHours(0, 0, 0, 0);
+  }
+
+  const q = params.get("q");
+  if (q !== null) {
+    calendarData.config.searchQuery = q;
+    if (searchInput) searchInput.value = q;
+  }
+
+  const tagsParam = params.get("tags");
+  if (tagsParam) {
+    calendarData.config.selectedTags = tagsParam.split(",");
+  } else {
+    calendarData.config.selectedTags = [];
   }
 
   drawCalendar(currentDate);
@@ -1008,11 +1034,103 @@ if (searchInput) {
   searchInput.addEventListener("input", (e) => {
     calendarData.config.searchQuery = e.target.value;
     saveToLocalStorage();
+    updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
     drawCalendar(currentDate);
   });
   // 初期値をセット
   searchInput.value = calendarData.config.searchQuery || "";
 }
+
+// コントラスト色（黒または白）を計算するヘルパー
+function getContrastColor(hex) {
+  if (!hex || hex.indexOf('#') !== 0) return '#ffffff';
+  // 3桁の短縮表記を6桁に変換
+  let c = hex.slice(1);
+  if (c.length === 3) {
+    c = c.split('').map(char => char + char).join('');
+  }
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  // 相対輝度の算出 (YIQ式)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? '#1a1a1a' : '#ffffff';
+}
+
+// フィルタバナーの更新
+function updateFilterStatusBanner() {
+  const banner = document.getElementById("filter-status-banner");
+  const textEl = document.getElementById("filter-status-text");
+  
+  if (!banner || !textEl) return;
+  
+  const query = calendarData.config.searchQuery || "";
+  const selectedTags = calendarData.config.selectedTags || [];
+  
+  if (!query && selectedTags.length === 0) {
+    banner.style.display = "none";
+    return;
+  }
+  
+  banner.style.display = "flex";
+  textEl.innerHTML = "現在絞り込み中：";
+  
+  if (query) {
+    const qSpan = document.createElement("span");
+    qSpan.className = "filter-pill filter-pill-search";
+    qSpan.innerHTML = `🔍 "${query}" <span class="filter-pill-close" onclick="clearSearchQuery()">×</span>`;
+    textEl.appendChild(qSpan);
+  }
+  
+  if (selectedTags.length > 0) {
+    selectedTags.forEach(tag => {
+      const tSpan = document.createElement("span");
+      tSpan.className = "filter-pill filter-pill-tag";
+      const bgColor = calendarData.content.tagColors[tag] || "#777";
+      const textColor = getContrastColor(bgColor);
+      const closeBg = textColor === "#1a1a1a" ? "rgba(0, 0, 0, 0.15)" : "rgba(255, 255, 255, 0.25)";
+      const closeHoverColor = textColor === "#1a1a1a" ? "#000" : "#fff";
+      
+      tSpan.style.backgroundColor = bgColor;
+      tSpan.style.color = textColor;
+      tSpan.innerHTML = `${tag} <span class="filter-pill-close" style="background-color: ${closeBg};" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.25)'" onmouseout="this.style.backgroundColor='${closeBg}'" onclick="clearSingleTag('${tag}')">×</span>`;
+      textEl.appendChild(tSpan);
+    });
+  }
+}
+
+// 個別解除用グローバル関数
+window.clearSearchQuery = function() {
+  calendarData.config.searchQuery = "";
+  if (searchInput) searchInput.value = "";
+  saveToLocalStorage();
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+  drawCalendar(currentDate);
+};
+
+window.clearSingleTag = function(tag) {
+  if (calendarData.config.selectedTags) {
+    calendarData.config.selectedTags = calendarData.config.selectedTags.filter(t => t !== tag);
+    saveToLocalStorage();
+    updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+    drawCalendar(currentDate);
+  }
+};
+
+// クリアボタンのイベント登録
+document.addEventListener("DOMContentLoaded", () => {
+  const clearBtn = document.getElementById("filter-clear-btn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      calendarData.config.searchQuery = "";
+      calendarData.config.selectedTags = [];
+      if (searchInput) searchInput.value = "";
+      saveToLocalStorage();
+      updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+      drawCalendar(currentDate);
+    });
+  }
+});
 
 // update the global render function that the HTML calls oninput="render()"
 window.render = function() {
@@ -1085,29 +1203,10 @@ if (themeSelect) {
   });
 }
 
-// 検索ボタン・トグルのイベント
-searchOpenBtn.addEventListener('click', () => {
-  searchModalBg.style.display = "flex";
-  // 検索モーダルを開いたときに検索キーワードを反映
-  searchInput.value = calendarData.config.searchQuery;
-  searchInput.focus(); // 検索入力欄にフォーカス
-  renderFilters();
-});
-
-searchCloseBtn.addEventListener('click', () => {
-  searchModalBg.style.display = "none";
-});
-
-document.getElementById("search-toggle-setting").addEventListener('change', (e) => {
-  calendarData.config.searchEnabled = e.target.checked;
-  saveToLocalStorage();
-  // 検索ボタンの表示を更新
-  applyAppearanceSettings();
-});
-
-searchModalBg.addEventListener('click', e => {
-  if (e.target === searchModalBg) searchModalBg.style.display = "none";
-});
+// 検索・フィルタリング用の初期ボタン設定
+if (searchOpenBtn) {
+  searchOpenBtn.style.display = calendarData.config.searchEnabled ? "inline-block" : "none";
+}
 
 if (window.matchMedia) {
   const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
