@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting to v5.0...</title>
+  <script>
+    // クエリパラメータやハッシュを維持してv5.0にリダイレクト
+    const targetUrl = "../v5.0/index.html" + window.location.search + window.location.hash;
+    window.location.replace(targetUrl);
+  </script>
+  <meta http-equiv="refresh" content="0;url=../v5.0/index.html">
+</head>
+<body>
+  <p>v5.0-betaはv5.0に移行しました。新しいバージョンにリダイレクトしています...</p>
+  <p><a href="../v5.0/index.html">リダイレクトされない場合はこちらをクリックしてください。</a></p>
+</body>
+</html>

@@ -678,15 +678,18 @@ function getRandomColor() {
 // --- 月移動・今日ボタン ---
 prevMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
   drawCalendar(currentDate);
 });
 nextMonthBtn.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() + 1);
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
   drawCalendar(currentDate);
 });
 todayBtn.addEventListener("click", () => {
   currentDate = new Date();
   currentDate.setHours(0,0,0,0);
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth(), day: currentDate.getDate() });
   drawCalendar(currentDate);
 });
 
@@ -969,7 +972,52 @@ setInterval(checkNotifications, 1000);
 // --- 初期処理 ---
 loadFromLocalStorage();
 applyAppearanceSettings();
-drawCalendar(currentDate);
+applyInitialQuery();
+
+// --- 検索機能の初期化とイベントリスナー ---
+const searchToggleSetting = document.getElementById("search-toggle-setting");
+if (searchToggleSetting) {
+  searchToggleSetting.value = calendarData.config.searchEnabled ? "on" : "off";
+  searchOpenBtn.style.display = calendarData.config.searchEnabled ? "inline-block" : "none";
+  
+  searchToggleSetting.addEventListener("change", (e) => {
+    calendarData.config.searchEnabled = (e.target.value === "on");
+    searchOpenBtn.style.display = calendarData.config.searchEnabled ? "inline-block" : "none";
+    saveToLocalStorage();
+  });
+}
+
+if (searchOpenBtn) {
+  searchOpenBtn.addEventListener("click", () => {
+    searchModalBg.style.display = "flex";
+    renderFilters();
+    searchInput.focus();
+  });
+}
+if (searchCloseBtn) {
+  searchCloseBtn.addEventListener("click", () => {
+    searchModalBg.style.display = "none";
+  });
+}
+if (searchModalBg) {
+  searchModalBg.addEventListener("click", (e) => {
+    if (e.target === searchModalBg) searchModalBg.style.display = "none";
+  });
+}
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    calendarData.config.searchQuery = e.target.value;
+    saveToLocalStorage();
+    drawCalendar(currentDate);
+  });
+  // 初期値をセット
+  searchInput.value = calendarData.config.searchQuery || "";
+}
+
+// update the global render function that the HTML calls oninput="render()"
+window.render = function() {
+  drawCalendar(currentDate);
+};
 
 saveJsonBtn.addEventListener("click", handleSave);
 
