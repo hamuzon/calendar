@@ -100,7 +100,7 @@
     })();
 
     document.addEventListener("DOMContentLoaded", () => {
-      const supportedVersions = new Set(["v1.0", "v2.0", "v3.0", "v4.0"]);
+      const supportedVersions = new Set(["v1.0", "v2.0", "v3.0", "v4.0", "v5.0"]);
       const pathSegments = location.pathname.split("/").filter(Boolean);
       const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
       const backLink = document.getElementById("backLink");
