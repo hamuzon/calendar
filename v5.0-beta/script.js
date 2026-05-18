@@ -37,7 +37,6 @@ const loadJsonInput = document.getElementById("load-json-input");
 const saveFormatSelect = document.getElementById("save-format-select");
 const saveFormatLock = document.getElementById("save-format-lock");
 const themeSelect = document.getElementById("theme-select");
-const contrastSelect = document.getElementById("contrast-select");
 
 // 通知ポップアップ要素
 const notificationPopup = document.getElementById("notification-popup");
@@ -60,8 +59,7 @@ let calendarData = {
   settings: {
     saveFormat: "json",
     lockSaveFormat: false,
-    theme: "auto",
-    contrast: "standard"
+    theme: "auto"
   }
 };
 
@@ -98,8 +96,7 @@ function loadFromLocalStorage() {
       calendarData.settings = {
         saveFormat: calendarData.settings?.saveFormat || "json",
         lockSaveFormat: !!calendarData.settings?.lockSaveFormat,
-        theme: calendarData.settings?.theme || "auto",
-        contrast: calendarData.settings?.contrast || "standard"
+        theme: calendarData.settings?.theme || "auto"
       };
     } catch {}
   }
@@ -154,7 +151,7 @@ function convertV1toV4(data) {
     version: CURRENT_SAVE_VERSION,
     events: convertedEvents,
     tagColors: data.settings?.tagColors || {},
-    settings: { saveFormat: "json", lockSaveFormat: false, theme: "auto", contrast: "standard" }
+    settings: { saveFormat: "json", lockSaveFormat: false, theme: "auto" }
   };
 }
 
@@ -185,7 +182,7 @@ function convertV2toV4(data) {
     version: CURRENT_SAVE_VERSION,
     events: convertedEvents,
     tagColors: data.tagColors || {},
-    settings: { saveFormat: "json", lockSaveFormat: false, theme: "auto", contrast: "standard" }
+    settings: { saveFormat: "json", lockSaveFormat: false, theme: "auto" }
   };
 }
 
@@ -216,7 +213,7 @@ function convertV3toV4(data) {
     version: CURRENT_SAVE_VERSION,
     events: convertedEvents,
     tagColors: data.tagColors || {},
-    settings: { saveFormat: "json", lockSaveFormat: false, theme: "auto", contrast: "standard" }
+    settings: { saveFormat: "json", lockSaveFormat: false, theme: "auto" }
   };
 }
 
@@ -606,8 +603,7 @@ function updateUrlQuery({year, month, day = null}) {
 
 function applyAppearanceSettings() {
   const theme = calendarData.settings?.theme || "auto";
-  const contrast = calendarData.settings?.contrast || "standard";
-  document.body.classList.remove("theme-dark", "theme-light", "contrast-universal");
+  document.body.classList.remove("theme-dark", "theme-light");
 
   if (theme === "dark") {
     document.body.classList.add("theme-dark");
@@ -617,7 +613,6 @@ function applyAppearanceSettings() {
     document.body.classList.add("theme-dark");
   }
 
-  if (contrast === "universal") document.body.classList.add("contrast-universal");
 }
 
 function applyInitialQuery() {
@@ -749,23 +744,17 @@ closeModal = function() {
 
 
 if (saveFormatSelect && saveFormatLock) {
-  const st = calendarData.settings || { saveFormat: "json", lockSaveFormat: false, theme: "auto", contrast: "standard" };
+  const st = calendarData.settings || { saveFormat: "json", lockSaveFormat: false, theme: "auto" };
   saveFormatSelect.value = st.saveFormat || "json";
   saveFormatLock.checked = !!st.lockSaveFormat;
   saveFormatSelect.addEventListener("change", () => { calendarData.settings = calendarData.settings || {}; calendarData.settings.saveFormat = saveFormatSelect.value; if (saveFormatLock.checked) saveToLocalStorage(); });
   saveFormatLock.addEventListener("change", () => { calendarData.settings = calendarData.settings || {}; calendarData.settings.lockSaveFormat = saveFormatLock.checked; calendarData.settings.saveFormat = saveFormatSelect.value; saveToLocalStorage(); });
 }
 
-if (themeSelect && contrastSelect) {
+if (themeSelect) {
   themeSelect.value = calendarData.settings?.theme || "auto";
-  contrastSelect.value = calendarData.settings?.contrast || "standard";
   themeSelect.addEventListener("change", () => {
     calendarData.settings.theme = themeSelect.value;
-    applyAppearanceSettings();
-    saveToLocalStorage();
-  });
-  contrastSelect.addEventListener("change", () => {
-    calendarData.settings.contrast = contrastSelect.value;
     applyAppearanceSettings();
     saveToLocalStorage();
   });

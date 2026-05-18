@@ -39,9 +39,6 @@ body.theme-dark {
   --btn-hover: #34689b;
   --btn-hover-text: #fff;
 }
-body.contrast-universal .sunday { color: #d1495b; }
-body.contrast-universal .saturday { color: #2f67d8; }
-body.contrast-universal .event { background-color: #dff3ff; color: #0f1b2d; }
 
 /* ================= ヘッダー ================= */
 header {
@@ -239,6 +236,7 @@ td > div:first-child {
 /* ================= イベント表示 ================= */
 .event {
   background-color: #d3f1d8;
+  color: #1d2a22;
   border-radius: 6px;
   margin-bottom: 3px;
   padding: 3px 6px;
@@ -279,7 +277,7 @@ td > div:first-child {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background-color: #7c7c7c;
+  background-color: #56657a;
   color: white;
 }
 
@@ -372,15 +370,13 @@ select {
   border-radius: 6px;
   border: none;
   font-weight: 600;
-  background-color: #4a7c59;
+  background-color: var(--btn-hover);
   color: white;
   font-size: 14px;
   transition: background-color 0.3s ease;
 }
 
-.modal-buttons button:hover {
-  background-color: #3d6646;
-}
+.modal-buttons button:hover { filter: brightness(1.08); }
 
 /* ================= タグカラー設定 ================= */
 .tag-color-list {
@@ -437,7 +433,7 @@ select {
   flex-grow: 1;
   padding: 6px 8px;
   font-size: 1em;
-  border: 1px solid #aaa;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
@@ -451,7 +447,7 @@ select {
 }
 
 .tag-add button {
-  background-color: #4a7c59;
+  background-color: var(--btn-hover);
   color: white;
   padding: 6px 14px;
   font-weight: 600;
@@ -461,12 +457,10 @@ select {
   transition: background-color 0.3s ease;
 }
 
-.tag-add button:hover {
-  background-color: #3d6646;
-}
+.tag-add button:hover { filter: brightness(1.08); }
 .settings-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 .settings-grid > div {
@@ -526,4 +520,21 @@ select {
     height: 90vh;
     padding: 16px 20px;
   }
+}
+
+body.theme-dark .event {
+  background-color: #334a68;
+  color: #f2f7ff;
+}
+
+body.theme-dark .event > button,
+body.theme-dark .tag-color-item button,
+body.theme-dark .tag-add button {
+  background-color: #3f79b7;
+}
+
+body.theme-dark .event > button:hover,
+body.theme-dark .tag-color-item button:hover,
+body.theme-dark .tag-add button:hover {
+  background-color: #5590cf;
 }
