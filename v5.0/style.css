@@ -14,6 +14,11 @@
   --btn-text: #333;
   --btn-hover: #4a7c59;
   --btn-hover-text: #fff;
+  --danger-bg: #fff0f0;
+  --danger-text: #cc4a4a;
+  --danger-border: #f5c6c6;
+  --danger-hover: #cc4a4a;
+  --danger-hover-text: #fff;
 }
 
 body {
@@ -38,6 +43,11 @@ body.theme-dark {
   --btn-text: #e8edf3;
   --btn-hover: #34689b;
   --btn-hover-text: #fff;
+  --danger-bg: #4a2b2b;
+  --danger-text: #ffb3b3;
+  --danger-border: #803d3d;
+  --danger-hover: #d15656;
+  --danger-hover-text: #fff;
 }
 
 /* ================= ヘッダー ================= */
@@ -480,8 +490,42 @@ select {
   width: 100%;
 }
 
+.danger-zone {
+  margin-top: 15px;
+  padding: 12px;
+  border: 1px solid var(--danger-border);
+  border-radius: 8px;
+  background-color: var(--danger-bg);
+  text-align: center;
+}
+
+.danger-zone h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--danger-text);
+  font-size: 1.1em;
+}
+
+.btn-danger {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--danger-text);
+  border-radius: 6px;
+  background-color: var(--danger-bg);
+  color: var(--danger-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+  color: var(--danger-hover-text);
+}
+
 /* 初期状態の非表示設定 */
 #load-json-input,
+#search-open-btn,
 .notification-popup {
   display: none;
 }
@@ -560,13 +604,15 @@ body.theme-dark .tag-add button:hover {
   z-index: 2;
 }
 
-#settings-cancel-btn {
+#settings-cancel-btn,
+.modal-close-btn {
   align-self: flex-end;
   padding: 8px 14px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--btn-bg);
   color: var(--btn-text);
+  margin-top: 10px;
 }
 
 body.theme-dark .event-tag {
@@ -579,14 +625,19 @@ body.theme-dark .event-location {
 }
 
 
-/* themed scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--btn-hover) var(--muted-panel);
+/* themed scrollbars - Broad compatibility with feature detection */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--btn-hover) var(--muted-panel);
+  }
 }
-*::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-track { background: var(--muted-panel); }
-*::-webkit-scrollbar-thumb { background: var(--btn-hover); border-radius: 999px; border: 2px solid var(--muted-panel); }
+
+/* Fallback for Webkit browsers (Chrome < 121, Safari, Samsung) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--muted-panel); }
+::-webkit-scrollbar-thumb { background: var(--btn-hover); border-radius: 10px; border: 2px solid var(--muted-panel); }
+::-webkit-scrollbar-thumb:hover { filter: brightness(1.1); }
 
 #open-tag-settings-btn,
 #tag-settings-close-btn {

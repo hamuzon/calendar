@@ -1,8 +1,29 @@
 "use strict";
 
 // --- サポートバージョン ---
-const SUPPORTED_VERSIONS = ["1.0", "2.0", "3.0", "4.0", "5.0-beta"];
-const CURRENT_SAVE_VERSION = "5.0-beta";
+const SUPPORTED_VERSIONS = ["1.0", "2.0", "3.0", "4.0", "5.0"];
+const CURRENT_SAVE_VERSION = "5.0";
+const STORAGE_KEY = "calendar_data_v5";
+
+// --- v5.0 最適化データ構造 ---
+let calendarData = {
+  meta: {
+    version: CURRENT_SAVE_VERSION,
+    icon: "📝",
+    updatedAt: new Date().toISOString()
+  },
+  content: {
+    events: {},
+    tagColors: { "#仕事": "#4a7c59", "#プライベート": "#d27c7c", "#重要": "#7c4a7c" }
+  },
+  config: {
+    theme: "auto",
+    hiddenCategories: [],
+    searchEnabled: false,
+    saveFormat: "json",
+    searchQuery: ""
+  }
+};
 
 // --- HTML要素取得 ---
 const calendarBody = document.getElementById("calendar-body");
@@ -12,6 +33,10 @@ const nextMonthBtn = document.getElementById("next-month");
 const todayBtn = document.getElementById("today-button");
 
 const modalBg = document.getElementById("modal-bg");
+const searchModalBg = document.getElementById("search-modal-bg");
+const searchOpenBtn = document.getElementById("search-open-btn");
+const searchCloseBtn = document.getElementById("search-close-btn");
+const searchInput = document.getElementById("search-input"); // 検索入力欄
 const modalDateTitle = document.getElementById("modal-date");
 const eventList = document.getElementById("event-list");
 const newEventStart = document.getElementById("new-event-start");
@@ -51,23 +76,6 @@ const notificationCloseBtn = document.getElementById("notification-close-btn");
 let currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 
-let calendarData = {
-  version: CURRENT_SAVE_VERSION,
-  events: {},
-  tagColors: {
-    "#仕事": "#4a7c59",
-    "#プライベート": "#d27c7c",
-    "#重要": "#7c4a7c"
-  },
-  settings: {
-    saveFormat: "json",
-    lockSaveFormat: false,
-    theme: "auto"
-  }
-};
-
-const STORAGE_KEY = "calendarData-v5beta";
-
 // --- 通知済みイベント管理 ---
 const notifiedEvents = new Set();
 
@@ -88,21 +96,58 @@ function eventUniqueKey(dateStr, startTime, text) {
 
 // --- ローカルストレージ読み書き ---
 function saveToLocalStorage() {
+  calendarData.meta.updatedAt = new Date().toISOString();
+  // 保存時はインデントなし（軽量化）
   localStorage.setItem(STORAGE_KEY, JSON.stringify(calendarData));
 }
+
+function exportAsIndentedJson() {
+  const jsonString = JSON.stringify(calendarData, null, 2); // 2スペースのインデント
+  const blob = new Blob([jsonString], { type: "application/json" });
+  downloadTextFile(jsonString, `Calendar-${CURRENT_SAVE_VERSION}_${getTimestampForFileName()}.json`, "application/json");
+}
+
+function confirmReset() {
+  if (window.confirm("設定とすべての予定を初期化しますか？\n保存されていないデータは失われます。")) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
 function loadFromLocalStorage() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
-      const data = JSON.parse(stored);
-      calendarData = convertDataToV4(data);
-      calendarData.settings = {
-        saveFormat: calendarData.settings?.saveFormat || "json",
-        lockSaveFormat: !!calendarData.settings?.lockSaveFormat,
-        theme: calendarData.settings?.theme || "auto"
-      };
+      let data = JSON.parse(stored);
+      // v5構造への移行チェック
+      if (!data.meta) {
+        data = convertDataToV5(data);
+      }
+      if (!data.config.searchQuery) data.config.searchQuery = ""; // 検索キーワードの初期化
+        // 保存形式の初期化
+        if (!data.config.saveFormat) data.config.saveFormat = "json";
+      calendarData = data;
     } catch {}
   }
+}
+
+// --- v5.0 構造への変換 ---
+function convertDataToV5(oldData) {
+  const v4Data = convertDataToV4(oldData);
+  return {
+    meta: { version: "5.0", icon: "📝", updatedAt: new Date().toISOString() },
+    content: {
+      events: v4Data.events || {},
+      tagColors: v4Data.tagColors || {}
+    },
+    config: {
+      theme: v4Data.settings?.theme || "auto",
+      hiddenCategories: [],
+      searchEnabled: false,
+      saveFormat: "json",
+      searchQuery: ""
+    }
+  };
 }
 
 // --- バージョン変換 ---
@@ -226,9 +271,8 @@ function drawCalendar(date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   monthYear.textContent = `${year}年 ${month + 1}月`;
-  if (typeof updateUrlQuery === "function" && modalBg.style.display !== "flex") {
-    updateUrlQuery({ year, month });
-  }
+  
+  if (searchModalBg.style.display === "flex") renderFilters(); // フィルタ表示中のみ更新
 
   const firstDay = new Date(year, month, 1);
   const firstWeekday = firstDay.getDay();
@@ -272,7 +316,16 @@ function drawCalendar(date) {
         td.classList.add("today");
       }
 
-      const evList = calendarData.events[formatDate(cellDate)] || [];
+      const searchQuery = calendarData.config.searchQuery.toLowerCase(); // 保存された検索キーワードを使用
+      const rawEvList = calendarData.content.events[formatDate(cellDate)] || [];
+      
+      // 検索とタグフィルタリングの適用
+      const evList = rawEvList.filter(ev => {
+        const matchesSearch = ev.text.toLowerCase().includes(searchQuery);
+        const isNotHidden = !ev.tags || ev.tags.every(tag => !calendarData.config.hiddenCategories.includes(tag));
+        return matchesSearch && isNotHidden;
+      });
+
       evList.forEach(ev => {
         const evDiv = document.createElement("span");
         evDiv.className = "event";
@@ -285,7 +338,7 @@ function drawCalendar(date) {
           const tagSpan = document.createElement("span");
           tagSpan.className = "event-tag";
           tagSpan.textContent = tag;
-          tagSpan.style.backgroundColor = calendarData.tagColors[tag] || "#777";
+          tagSpan.style.backgroundColor = calendarData.content.tagColors[tag] || "#777";
           evDiv.appendChild(tagSpan);
         });
 
@@ -347,9 +400,39 @@ modalBg.addEventListener("click", e => {
 });
 closeBtn.addEventListener("click", closeModal);
 
+// --- フィルターUIの生成 ---
+function renderFilters() { // 検索モーダル内のタグフィルタUIを生成
+  const tagContainer = document.getElementById("tag-checkboxes");
+  if (!tagContainer) return; // searchModalBg.style.display === "flex" は呼び出し元で制御
+  
+  const tags = Object.keys(calendarData.content.tagColors);
+  tagContainer.innerHTML = tags.map(tag => `
+    <div class="tag-select-row ${calendarData.config.hiddenCategories.includes(tag) ? 'is-inactive' : 'is-active'}" 
+         onclick="toggleTagFilter('${tag}')">
+      <span class="tag-select-icon">
+        ${calendarData.config.hiddenCategories.includes(tag) ? '○' : '●'}
+      </span>
+      <span class="event-tag" style="background-color: ${calendarData.content.tagColors[tag] || '#777'};">
+        ${tag}
+      </span>
+    </div>
+  `).join("");
+}
+
+window.toggleTagFilter = function(tag) {
+  const hidden = calendarData.config.hiddenCategories;
+  if (hidden.includes(tag)) {
+    calendarData.config.hiddenCategories = hidden.filter(t => t !== tag);
+  } else {
+    hidden.push(tag);
+  }
+  saveToLocalStorage();
+  render(); // タグフィルタ変更後もカレンダーを再描画
+};
+
 function updateEventList() {
   eventList.innerHTML = "";
-  const list = calendarData.events[selectedDate] || [];
+  const list = calendarData.content.events[selectedDate] || [];
   if (list.length === 0) {
     eventList.textContent = "予定はありません";
     return;
@@ -370,7 +453,7 @@ function updateEventList() {
       const tagSpan = document.createElement("span");
       tagSpan.className = "event-tag";
       tagSpan.textContent = tag;
-      tagSpan.style.backgroundColor = calendarData.tagColors[tag] || "#777";
+      tagSpan.style.backgroundColor = calendarData.content.tagColors[tag] || "#777";
       div.appendChild(tagSpan);
     });
 
@@ -410,9 +493,9 @@ function updateEventList() {
     deleteBtn.style.marginLeft = "6px";
     deleteBtn.addEventListener("click", () => {
       if (confirm("この予定を削除してもよろしいですか？")) {
-        calendarData.events[selectedDate].splice(i, 1);
-        if (calendarData.events[selectedDate].length === 0) {
-          delete calendarData.events[selectedDate];
+        calendarData.content.events[selectedDate].splice(i, 1);
+        if (calendarData.content.events[selectedDate].length === 0) {
+          delete calendarData.content.events[selectedDate];
         }
         saveToLocalStorage();
         updateEventList();
@@ -453,24 +536,24 @@ addEventBtn.addEventListener("click", () => {
 
   // タグがある場合はtagColorsに登録（なければデフォルト色）
   tags.forEach(tag => {
-    if (!calendarData.tagColors[tag]) {
-      calendarData.tagColors[tag] = getRandomColor();
+    if (!calendarData.content.tagColors[tag]) {
+      calendarData.content.tagColors[tag] = getRandomColor();
     }
   });
 
   // タグ部分は予定テキストから除去
   const text = textRaw.replace(/#\S+/g, "").trim();
 
-  if (!calendarData.events[selectedDate]) {
-    calendarData.events[selectedDate] = [];
+  if (!calendarData.content.events[selectedDate]) {
+    calendarData.content.events[selectedDate] = [];
   }
 
   const eventObj = { start, end, text, location, notify, tags };
 
   if (editingIndex !== null) {
-    calendarData.events[selectedDate][editingIndex] = eventObj;
+    calendarData.content.events[selectedDate][editingIndex] = eventObj;
   } else {
-    calendarData.events[selectedDate].push(eventObj);
+    calendarData.content.events[selectedDate].push(eventObj);
   }
 
   saveToLocalStorage();
@@ -493,15 +576,15 @@ addEventBtn.addEventListener("click", () => {
 // --- タグカラー管理 ---
 function renderTagColorList() {
   tagColorList.innerHTML = "";
-  for (const tag in calendarData.tagColors) {
+  for (const tag in calendarData.content.tagColors) {
     const div = document.createElement("div");
     div.className = "tag-color-item";
 
     const colorInput = document.createElement("input");
     colorInput.type = "color";
-    colorInput.value = calendarData.tagColors[tag];
+    colorInput.value = calendarData.content.tagColors[tag];
     colorInput.addEventListener("change", () => {
-      calendarData.tagColors[tag] = colorInput.value;
+      calendarData.content.tagColors[tag] = colorInput.value;
       saveToLocalStorage();
       drawCalendar(currentDate);
       renderTagColorList();
@@ -517,9 +600,9 @@ function renderTagColorList() {
     deleteBtn.style.marginLeft = "12px";
     deleteBtn.addEventListener("click", () => {
       if (confirm(`${tag} をタグカラー設定から削除しますか？`)) {
-        delete calendarData.tagColors[tag];
-        for (const date in calendarData.events) {
-          calendarData.events[date].forEach(ev => {
+        delete calendarData.content.tagColors[tag];
+        for (const date in calendarData.content.events) {
+          calendarData.content.events[date].forEach(ev => {
             ev.tags = ev.tags.filter(t => t !== tag);
           });
         }
@@ -544,13 +627,13 @@ addTagBtn.addEventListener("click", () => {
   }
   if (!tagName.startsWith("#")) tagName = "#" + tagName;
 
-  if (calendarData.tagColors[tagName]) {
+  if (calendarData.content.tagColors[tagName]) {
     alert("このタグは既に存在します。");
     newTagName.focus();
     return;
   }
 
-  calendarData.tagColors[tagName] = newTagColor.value;
+  calendarData.content.tagColors[tagName] = newTagColor.value;
   newTagName.value = "";
   saveToLocalStorage();
   renderTagColorList();
@@ -617,7 +700,7 @@ function updateUrlQuery({year, month, day = null}) {
 }
 
 function applyAppearanceSettings() {
-  const theme = calendarData.settings?.theme || "auto";
+  const theme = calendarData.config?.theme || "auto";
   document.body.classList.remove("theme-dark", "theme-light");
 
   if (theme === "dark") {
@@ -669,8 +752,8 @@ function downloadTextFile(content, filename, mimeType) {
 }
 
 function exportAsJson() {
-  const fileName = `Calendar-v5.0-beta_${getTimestampForFileName()}.json`;
-  downloadTextFile(JSON.stringify(calendarData), fileName, "application/json");
+  const fileName = `Calendar-${CURRENT_SAVE_VERSION}_${getTimestampForFileName()}.json`;
+  downloadTextFile(JSON.stringify(calendarData, null, 2), fileName, "application/json");
 }
 
 function toIcsDateTime(dateKey, time) {
@@ -682,18 +765,18 @@ function toIcsDateTime(dateKey, time) {
   return { local, tz };
 }
 
-function exportAsIcs() {
+function getIcsContent() {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Calendar v5.0-beta//EN",
+    "PRODID:-//Calendar v5.0//EN",
     "CALSCALE:GREGORIAN",
     `X-WR-TIMEZONE:${tz}`
   ];
 
-  Object.keys(calendarData.events).sort().forEach(dateKey => {
-    (calendarData.events[dateKey] || []).forEach((ev, idx) => {
+  Object.keys(calendarData.content.events).sort().forEach(dateKey => {
+    (calendarData.content.events[dateKey] || []).forEach((ev, idx) => {
       const startInfo = toIcsDateTime(dateKey, ev.start || "00:00");
       const endInfo = toIcsDateTime(dateKey, ev.end || ev.start || "00:00");
       const uid = `${dateKey}-${idx}-${Math.random().toString(36).slice(2)}@calendar-v5`;
@@ -709,13 +792,42 @@ function exportAsIcs() {
   });
 
   lines.push("END:VCALENDAR");
-  const fileName = `Calendar-v5.0-beta_${getTimestampForFileName()}.ics`;
-  downloadTextFile(lines.join("\r\n") + "\r\n", fileName, "text/calendar");
+  return lines.join("\r\n") + "\r\n";
 }
 
-function handleSave() {
-  const format = calendarData.settings?.saveFormat || "json";
-  if (format === "ics") exportAsIcs();
+function exportAsIcs() {
+  const fileName = `Calendar-${CURRENT_SAVE_VERSION}_${getTimestampForFileName()}.ics`;
+  downloadTextFile(getIcsContent(), fileName, "text/calendar");
+}
+
+async function handleSave() { 
+  // ブラウザがFile System Access APIに対応している場合（WindowsのChrome等）、ダイアログで形式を選べるようにする
+  if ('showSaveFilePicker' in window) {
+    try {
+      const timestamp = getTimestampForFileName();
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `Calendar-${CURRENT_SAVE_VERSION}_${timestamp}`,
+        types: [
+          { description: 'JSON File', accept: { 'application/json': ['.json'] } },
+          { description: 'iCalendar File', accept: { 'text/calendar': ['.ics'] } }
+        ]
+      });
+      
+      const ext = handle.name.split('.').pop().toLowerCase();
+      const content = (ext === 'ics') ? getIcsContent() : JSON.stringify(calendarData, null, 2);
+      
+      const writable = await handle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return; // キャンセル時は何もしない
+      console.warn("Picker failed, falling back to default method.", e);
+    }
+  }
+
+  // API非対応ブラウザやエラー時は、設定された既定の形式で保存
+  if (calendarData.config.saveFormat === "ics") exportAsIcs();
   else exportAsJson();
 }
 
@@ -814,7 +926,7 @@ function checkNotifications() {
   const now = new Date();
   const todayStr = formatDate(now);
   const nowStr = now.toTimeString().slice(0, 8);
-  const events = calendarData.events[todayStr] || [];
+  const events = calendarData.content.events[todayStr] || [];
 
   events.forEach(ev => {
     if (!ev.notify || !ev.start) return;
@@ -857,23 +969,10 @@ setInterval(checkNotifications, 1000);
 // --- 初期処理 ---
 loadFromLocalStorage();
 applyAppearanceSettings();
-applyInitialQuery();
-
-const _openModal = openModal;
-openModal = function(date) {
-  _openModal(date);
-  updateUrlQuery({ year: date.getFullYear(), month: date.getMonth(), day: date.getDate() });
-};
-
-const _closeModal = closeModal;
-closeModal = function() {
-  _closeModal();
-  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
-};
-
-
+drawCalendar(currentDate);
 
 saveJsonBtn.addEventListener("click", handleSave);
+
 loadJsonBtn.addEventListener("click", () => loadJsonInput.click());
 loadJsonInput.addEventListener("change", async () => {
   const file = loadJsonInput.files && loadJsonInput.files[0];
@@ -882,25 +981,45 @@ loadJsonInput.addEventListener("change", async () => {
     const content = await file.text();
     if (file.name.toLowerCase().endsWith(".ics")) {
       const imported = parseIcsToEvents(content);
-      calendarData.events = imported;
-      calendarData.version = CURRENT_SAVE_VERSION;
+      calendarData.content.events = imported;
+      alert("ICSファイルを読み込みました。");
     } else {
       const data = JSON.parse(content);
-      const converted = convertDataToV4(data);
-      calendarData = {
-        ...calendarData,
-        ...converted,
-        settings: {
-          saveFormat: calendarData.settings?.saveFormat || "json",
-          lockSaveFormat: !!calendarData.settings?.lockSaveFormat,
-          theme: calendarData.settings?.theme || "auto"
+
+      let versionToLoad = null;
+      let alertMessage = "";
+
+      // v5.0 形式のチェック (meta.version を保持)
+      if (data.meta && data.meta.version && SUPPORTED_VERSIONS.includes(data.meta.version)) {
+        versionToLoad = data.meta.version;
+        alertMessage = `バージョン${versionToLoad}のファイルを読み込みました`;
+      } 
+      // v2.0 - v4.0 形式のチェック (直下に version を保持)
+      else if (data.version && SUPPORTED_VERSIONS.includes(data.version)) {
+        versionToLoad = data.version;
+        alertMessage = `バージョン${versionToLoad}のファイルを読み込みました`;
+      } 
+      // v1.0 形式のチェック (versionフィールドなし、eventsオブジェクトあり)
+      else if (!data.version && !data.meta && data.events && typeof data.events === "object") {
+        versionToLoad = "1.0";
+        alertMessage = `バージョン${versionToLoad}のファイルを読み込みました `;
+      }
+
+      if (versionToLoad) {
+        if (!data.meta) {
+          calendarData = convertDataToV5(data);
+        } else {
+          calendarData = data;
         }
-      };
+        alert(alertMessage);
+      } else {
+        alert("非対応バージョンのファイルです");
+        return;
+      }
     }
     saveToLocalStorage();
     drawCalendar(currentDate);
     applyAppearanceSettings();
-    alert("読み込みが完了しました。");
   } catch (error) {
     alert("読み込みに失敗しました。ファイル形式をご確認ください。");
     console.error(error);
@@ -909,27 +1028,43 @@ loadJsonInput.addEventListener("change", async () => {
   }
 });
 
-if (saveFormatSelect && saveFormatLock) {
-  const st = calendarData.settings || { saveFormat: "json", lockSaveFormat: false, theme: "auto" };
-  saveFormatSelect.value = st.saveFormat || "json";
-  saveFormatLock.checked = !!st.lockSaveFormat;
-  saveFormatSelect.addEventListener("change", () => { calendarData.settings = calendarData.settings || {}; calendarData.settings.saveFormat = saveFormatSelect.value; if (saveFormatLock.checked) saveToLocalStorage(); });
-  saveFormatLock.addEventListener("change", () => { calendarData.settings = calendarData.settings || {}; calendarData.settings.lockSaveFormat = saveFormatLock.checked; calendarData.settings.saveFormat = saveFormatSelect.value; saveToLocalStorage(); });
-}
-
 if (themeSelect) {
-  themeSelect.value = calendarData.settings?.theme || "auto";
+  themeSelect.value = calendarData.config?.theme || "auto";
   themeSelect.addEventListener("change", () => {
-    calendarData.settings.theme = themeSelect.value;
+    calendarData.config.theme = themeSelect.value;
     applyAppearanceSettings();
     saveToLocalStorage();
   });
 }
 
+// 検索ボタン・トグルのイベント
+searchOpenBtn.addEventListener('click', () => {
+  searchModalBg.style.display = "flex";
+  // 検索モーダルを開いたときに検索キーワードを反映
+  searchInput.value = calendarData.config.searchQuery;
+  searchInput.focus(); // 検索入力欄にフォーカス
+  renderFilters();
+});
+
+searchCloseBtn.addEventListener('click', () => {
+  searchModalBg.style.display = "none";
+});
+
+document.getElementById("search-toggle-setting").addEventListener('change', (e) => {
+  calendarData.config.searchEnabled = e.target.checked;
+  saveToLocalStorage();
+  // 検索ボタンの表示を更新
+  applyAppearanceSettings();
+});
+
+searchModalBg.addEventListener('click', e => {
+  if (e.target === searchModalBg) searchModalBg.style.display = "none";
+});
+
 if (window.matchMedia) {
   const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const syncAutoTheme = () => {
-    if ((calendarData.settings?.theme || "auto") === "auto") applyAppearanceSettings();
+    if ((calendarData.config.theme || "auto") === "auto") applyAppearanceSettings();
   };
   if (darkQuery.addEventListener) darkQuery.addEventListener("change", syncAutoTheme);
   else if (darkQuery.addListener) darkQuery.addListener(syncAutoTheme);

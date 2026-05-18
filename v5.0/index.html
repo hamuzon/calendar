@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calendar v5.0-β</title>
+  <title>Calendar v5.0 📝</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="icon.svg" />
 </head>
 <body>
 <header>
-  <h1>📅 Calendar app 🗓️</h1>
+  <h1>📅 Calendar app <span class="version-badge">v5.0</span> 📝</h1>
 
   <div class="nav-buttons">
     <div class="nav-group main-nav">
@@ -19,6 +19,7 @@
     </div>
     <div class="nav-group extra-nav">
       <button id="today-button">今日</button>
+      <button id="search-open-btn" class="search-btn" title="検索">🔍</button>
       <button id="settings-btn" aria-haspopup="dialog" aria-controls="settings-modal-bg">設定 ⚙️</button>
       <button id="save-json-btn">保存 💾</button>
       <button id="load-json-btn">読み込み 📂</button>
@@ -64,11 +65,28 @@
   </div>
 </div>
 
-<!-- タグカラー設定モーダル -->
+<!-- 検索・フィルタモーダル -->
+<div id="search-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="search-title">
+  <div class="modal">
+    <h2 id="search-title">予定の検索とフィルタ 🔍</h2>
+    <section class="filter-section-modal">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="キーワードを入力..." oninput="render()"> <!-- render() を呼び出す -->
+      </div>
+      <div class="tag-filters">
+        <span>対象タグの選択:</span>
+        <div id="tag-checkboxes"></div>
+      </div>
+    </section>
+    <button id="search-close-btn" class="modal-close-btn">閉じる</button>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
 <div id="settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="modal">
-    <h2 id="settings-title">設定（表示・保存）</h2>
-        <div class="settings-grid">
+    <h2 id="settings-title">設定（検索・表示）</h2>
+    <div class="settings-grid">
       <div>
         <label for="theme-select">テーマ</label>
         <select id="theme-select" aria-label="テーマ設定">
@@ -77,17 +95,31 @@
           <option value="dark">ダーク</option>
         </select>
       </div>
+      <div class="setting-item">
+        <label for="search-toggle-setting">検索機能(🔍)</label>
+        <select id="search-toggle-setting">
+          <option value="off">OFF</option>
+          <option value="on">ON</option>
+        </select>
+      </div>
     </div>
     <hr />
     <button id="open-tag-settings-btn" type="button">タグ設定を開く</button>
     <hr />
-    <h3>保存形式</h3>
-    <label for="save-format-select">ワンクリック保存形式</label>
-    <select id="save-format-select" aria-label="保存形式">
-      <option value="json">JSON</option>
-      <option value="ics">ICS</option>
-    </select>
-    <label class="notify-label"><input type="checkbox" id="save-format-lock" /> 設定を固定する</label>
+    <div class="save-options">
+      <h3>保存形式</h3>
+      <label for="save-format-select">ワンクリック保存形式</label>
+      <select id="save-format-select" aria-label="保存形式">
+        <option value="json">JSON</option>
+        <option value="ics">ICS</option>
+      </select>
+      <label class="notify-label"><input type="checkbox" id="save-format-lock" /> 設定を固定する</label>
+    </div>
+    <hr />
+    <div class="danger-zone">
+      <h3>データ管理</h3>
+      <button onclick="confirmReset()" class="btn-danger">データの初期化 ⚠️</button>
+    </div>
     <button id="settings-cancel-btn">閉じる</button>
   </div>
 </div>
