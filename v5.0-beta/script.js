@@ -30,6 +30,9 @@ const newTagName = document.getElementById("new-tag-name");
 const newTagColor = document.getElementById("new-tag-color");
 const addTagBtn = document.getElementById("add-tag-btn");
 const settingsCancelBtn = document.getElementById("settings-cancel-btn");
+const openTagSettingsBtn = document.getElementById("open-tag-settings-btn");
+const tagSettingsModalBg = document.getElementById("tag-settings-modal-bg");
+const tagSettingsCloseBtn = document.getElementById("tag-settings-close-btn");
 
 const saveJsonBtn = document.getElementById("save-json-btn");
 const loadJsonBtn = document.getElementById("load-json-btn");
@@ -558,7 +561,19 @@ addTagBtn.addEventListener("click", () => {
 // 設定モーダル表示・非表示
 settingsBtn.addEventListener("click", () => {
   settingsModalBg.style.display = "flex";
+});
+
+openTagSettingsBtn.addEventListener("click", () => {
+  tagSettingsModalBg.style.display = "flex";
   renderTagColorList();
+});
+
+tagSettingsCloseBtn.addEventListener("click", () => {
+  tagSettingsModalBg.style.display = "none";
+});
+
+tagSettingsModalBg.addEventListener("click", e => {
+  if (e.target === tagSettingsModalBg) tagSettingsModalBg.style.display = "none";
 });
 settingsCancelBtn.addEventListener("click", () => {
   settingsModalBg.style.display = "none";
@@ -655,7 +670,7 @@ function downloadTextFile(content, filename, mimeType) {
 
 function exportAsJson() {
   const fileName = `Calendar-v5.0-beta_${getTimestampForFileName()}.json`;
-  downloadTextFile(JSON.stringify(calendarData, null, 2), fileName, "application/json");
+  downloadTextFile(JSON.stringify(calendarData), fileName, "application/json");
 }
 
 function toIcsDateTime(dateKey, time) {

@@ -67,9 +67,8 @@
 <!-- タグカラー設定モーダル -->
 <div id="settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="modal">
-    <h2 id="settings-title">設定（表示・保存・タグ）</h2>
-    <p>Google カレンダーのように、表示・配色・保存形式をここでまとめて変更できます。</p>
-    <div class="settings-grid">
+    <h2 id="settings-title">設定（表示・保存）</h2>
+        <div class="settings-grid">
       <div>
         <label for="theme-select">テーマ</label>
         <select id="theme-select" aria-label="テーマ設定">
@@ -80,22 +79,29 @@
       </div>
     </div>
     <hr />
-    <h3>タグカラー設定</h3>
+    <button id="open-tag-settings-btn" type="button">タグ設定を開く</button>
+    <hr />
+    <h3>保存形式</h3>
+    <label for="save-format-select">ワンクリック保存形式</label>
+    <select id="save-format-select" aria-label="保存形式">
+      <option value="json">JSON</option>
+      <option value="ics">ICS</option>
+    </select>
+    <label class="notify-label"><input type="checkbox" id="save-format-lock" /> 設定を固定する</label>
+    <button id="settings-cancel-btn">閉じる</button>
+  </div>
+</div>
+
+<div id="tag-settings-modal-bg" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="tag-settings-title">
+  <div class="modal">
+    <h2 id="tag-settings-title">タグ設定</h2>
     <div id="tag-color-list" class="tag-color-list"></div>
     <div class="tag-add">
       <input type="text" id="new-tag-name" placeholder="#タグ名" aria-label="新しいタグ名" />
       <input type="color" id="new-tag-color" value="#4a7c59" aria-label="新しいタグの色" />
       <button id="add-tag-btn">追加</button>
     </div>
-    <hr />
-    <h3>保存形式</h3>
-    <label for="save-format-select">ワンクリック保存形式</label>
-    <select id="save-format-select" aria-label="保存形式">
-      <option value="json">JSON (整形)</option>
-      <option value="ics">ICS</option>
-    </select>
-    <label class="notify-label"><input type="checkbox" id="save-format-lock" /> 設定を固定する</label>
-    <button id="settings-cancel-btn">閉じる</button>
+    <button id="tag-settings-close-btn" type="button">閉じる</button>
   </div>
 </div>
 
