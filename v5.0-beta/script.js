@@ -637,6 +637,120 @@ function applyInitialQuery() {
 }
 
 
+
+function getTimestampForFileName() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+}
+
+function downloadTextFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAsJson() {
+  const fileName = `Calendar-v5.0-beta_${getTimestampForFileName()}.json`;
+  downloadTextFile(JSON.stringify(calendarData, null, 2), fileName, "application/json");
+}
+
+function toIcsDateTime(dateKey, time) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const [hh, mm] = (time || "00:00").split(":").map(Number);
+  const dt = new Date(y, m - 1, d, hh || 0, mm || 0, 0);
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const local = `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+  return { local, tz };
+}
+
+function exportAsIcs() {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Calendar v5.0-beta//EN",
+    "CALSCALE:GREGORIAN",
+    `X-WR-TIMEZONE:${tz}`
+  ];
+
+  Object.keys(calendarData.events).sort().forEach(dateKey => {
+    (calendarData.events[dateKey] || []).forEach((ev, idx) => {
+      const startInfo = toIcsDateTime(dateKey, ev.start || "00:00");
+      const endInfo = toIcsDateTime(dateKey, ev.end || ev.start || "00:00");
+      const uid = `${dateKey}-${idx}-${Math.random().toString(36).slice(2)}@calendar-v5`;
+      lines.push("BEGIN:VEVENT");
+      lines.push(foldIcsLine(`UID:${uid}`));
+      lines.push(foldIcsLine(`DTSTART;TZID=${startInfo.tz}:${startInfo.local}`));
+      lines.push(foldIcsLine(`DTEND;TZID=${endInfo.tz}:${endInfo.local}`));
+      lines.push(foldIcsLine(`SUMMARY:${escapeIcsText(ev.text || "")}`));
+      if (ev.location) lines.push(foldIcsLine(`LOCATION:${escapeIcsText(ev.location)}`));
+      if (ev.tags?.length) lines.push(foldIcsLine(`CATEGORIES:${ev.tags.map(t => escapeIcsText(t)).join(",")}`));
+      lines.push("END:VEVENT");
+    });
+  });
+
+  lines.push("END:VCALENDAR");
+  const fileName = `Calendar-v5.0-beta_${getTimestampForFileName()}.ics`;
+  downloadTextFile(lines.join("\r\n") + "\r\n", fileName, "text/calendar");
+}
+
+function handleSave() {
+  const format = calendarData.settings?.saveFormat || "json";
+  if (format === "ics") exportAsIcs();
+  else exportAsJson();
+}
+
+function parseIcsToEvents(text) {
+  const unfolded = text.replace(/\r?\n[ \t]/g, "");
+  const lines = unfolded.split(/\r?\n/);
+  const importedEvents = {};
+  let ev = null;
+
+  const pushEvent = item => {
+    if (!item || !item.date) return;
+    if (!importedEvents[item.date]) importedEvents[item.date] = [];
+    importedEvents[item.date].push({
+      start: item.start || "",
+      end: item.end || "",
+      text: item.summary || "",
+      location: item.location || "",
+      notify: false,
+      tags: item.categories || []
+    });
+  };
+
+  for (const line of lines) {
+    if (line === "BEGIN:VEVENT") { ev = {}; continue; }
+    if (line === "END:VEVENT") { pushEvent(ev); ev = null; continue; }
+    if (!ev) continue;
+
+    if (line.startsWith("DTSTART")) {
+      const v = line.split(":")[1] || "";
+      const m = v.match(/(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?/);
+      if (m) {
+        ev.date = `${m[1]}-${m[2]}-${m[3]}`;
+        ev.start = m[4] ? `${m[4]}:${m[5] || "00"}` : "";
+      }
+    } else if (line.startsWith("DTEND")) {
+      const v = line.split(":")[1] || "";
+      const m = v.match(/(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?/);
+      if (m && m[4]) ev.end = `${m[4]}:${m[5] || "00"}`;
+    } else if (line.startsWith("SUMMARY:")) {
+      ev.summary = unescapeIcsText(line.slice(8));
+    } else if (line.startsWith("LOCATION:")) {
+      ev.location = unescapeIcsText(line.slice(9));
+    } else if (line.startsWith("CATEGORIES:")) {
+      ev.categories = line.slice(11).split(",").map(x => unescapeIcsText(x.trim())).filter(Boolean);
+    }
+  }
+
+  return importedEvents;
+}
+
 function escapeIcsText(text) {
   return (text || "")
     .replace(/\\/g, "\\\\")
@@ -742,6 +856,43 @@ closeModal = function() {
   updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
 };
 
+
+
+saveJsonBtn.addEventListener("click", handleSave);
+loadJsonBtn.addEventListener("click", () => loadJsonInput.click());
+loadJsonInput.addEventListener("change", async () => {
+  const file = loadJsonInput.files && loadJsonInput.files[0];
+  if (!file) return;
+  try {
+    const content = await file.text();
+    if (file.name.toLowerCase().endsWith(".ics")) {
+      const imported = parseIcsToEvents(content);
+      calendarData.events = imported;
+      calendarData.version = CURRENT_SAVE_VERSION;
+    } else {
+      const data = JSON.parse(content);
+      const converted = convertDataToV4(data);
+      calendarData = {
+        ...calendarData,
+        ...converted,
+        settings: {
+          saveFormat: calendarData.settings?.saveFormat || "json",
+          lockSaveFormat: !!calendarData.settings?.lockSaveFormat,
+          theme: calendarData.settings?.theme || "auto"
+        }
+      };
+    }
+    saveToLocalStorage();
+    drawCalendar(currentDate);
+    applyAppearanceSettings();
+    alert("読み込みが完了しました。");
+  } catch (error) {
+    alert("読み込みに失敗しました。ファイル形式をご確認ください。");
+    console.error(error);
+  } finally {
+    loadJsonInput.value = "";
+  }
+});
 
 if (saveFormatSelect && saveFormatLock) {
   const st = calendarData.settings || { saveFormat: "json", lockSaveFormat: false, theme: "auto" };
