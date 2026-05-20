@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>404 - Page Not Found / ページが見つかりません</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
-  <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
   <script>
     (function () {
       const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
@@ -20,16 +17,16 @@
       }
       projectRoot = projectRoot.replace(/\/+/g, "/");
 
-      const css = document.createElement("link");
-      css.rel = "stylesheet";
-      css.href = projectRoot + "404.css";
-      document.head.appendChild(css);
-
-      const js = document.createElement("script");
-      js.src = projectRoot + "404.js";
-      document.head.appendChild(js);
+      const base = document.createElement("base");
+      base.href = projectRoot;
+      document.head.appendChild(base);
     })();
   </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
+  <link rel="stylesheet" href="404.css" />
+  <script src="404.js" defer></script>
 </head>
 <body>
   <h1>404</h1>
