@@ -93,6 +93,7 @@
   <script>
     (function() {
       const path = window.location.pathname.toLowerCase();
+      const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
       if (path.includes('readme') || path.includes('license')) {
         window.location.replace('./');
         return;
@@ -102,6 +103,9 @@
         window.location.replace(newPath + window.location.search + window.location.hash);
         return;
       }
+
+      if (!isHamuzonGithubIo) return;
+
       const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
       const segments = window.location.pathname.split("/").filter(Boolean);
       const vIdx = segments.findIndex(isVersion);
