@@ -91,40 +91,51 @@
   <a id="backLink" class="back" href="/">トップページへ戻る</a>
 
   <script>
-    // README/LICENSE へのアクセス（大文字小文字問わず）を判定してリダイレクト
     (function() {
       const path = window.location.pathname.toLowerCase();
       if (path.includes('readme') || path.includes('license')) {
         window.location.replace('./');
         return;
       }
-      // v5.0-betaへのアクセスを判定してv5.0へ自動リダイレクト
       if (path.includes('v5.0-beta')) {
         const newPath = window.location.pathname.replace(/v5.0-beta/i, 'v5.0');
         window.location.replace(newPath + window.location.search + window.location.hash);
+        return;
+      }
+      const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
+      const segments = window.location.pathname.split("/").filter(Boolean);
+      const vIdx = segments.findIndex(isVersion);
+      if (vIdx !== -1 && segments.length > vIdx + 1) {
+        const versionRoot = ("/" + segments.slice(0, vIdx + 1).join("/") + "/").replace(/\/+/g, '/');
+        window.location.replace(versionRoot + window.location.search + window.location.hash);
       }
     })();
 
     document.addEventListener("DOMContentLoaded", () => {
-      const supportedVersions = new Set(["v1.0", "v2.0", "v3.0", "v4.0", "v5.0"]);
-      const pathSegments = location.pathname.split("/").filter(Boolean);
-      const versionSegmentIndex = pathSegments.findIndex((segment) => supportedVersions.has(segment));
+      const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
+      const segments = location.pathname.split("/").filter(Boolean);
+      const vIdx = segments.findIndex(isVersion);
       const backLink = document.getElementById("backLink");
       const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
-      const basePath = isHamuzonGithubIo ? "/calendar/" : "/";
 
-      if (versionSegmentIndex !== -1) {
-        if (isHamuzonGithubIo) {
-          backLink.href = `${location.origin}/calendar/${pathSegments[versionSegmentIndex]}/`;
-          return;
-        }
-
-        const versionPath = `/${pathSegments.slice(0, versionSegmentIndex + 1).join("/")}/`;
-        backLink.href = versionPath;
-        return;
+      let projectRoot = isHamuzonGithubIo ? "/calendar/" : "/";
+      if (vIdx !== -1 && !isHamuzonGithubIo) {
+        projectRoot = "/" + segments.slice(0, vIdx).join("/") + "/";
       }
+      projectRoot = projectRoot.replace(/\/+/g, '/');
 
-      backLink.href = `${location.origin}${basePath}`;
+      if (vIdx !== -1) {
+        const versionRoot = ("/" + segments.slice(0, vIdx + 1).join("/") + "/").replace(/\/+/g, '/');
+        const currentPath = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+
+        if (currentPath.toLowerCase() === versionRoot.toLowerCase()) {
+          backLink.href = projectRoot;
+        } else {
+          backLink.href = versionRoot;
+        }
+      } else {
+        backLink.href = projectRoot;
+      }
     });
   </script>
 </body>
