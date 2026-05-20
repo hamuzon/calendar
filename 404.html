@@ -6,15 +6,9 @@
   <title>404 - Page Not Found / ページが見つかりません</title>
   <script>
     (function () {
-      const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
-      const segments = location.pathname.split("/").filter(Boolean);
-      const vIdx = segments.findIndex(isVersion);
       const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
 
       let projectRoot = isHamuzonGithubIo ? "/calendar/" : "/";
-      if (vIdx !== -1) {
-        projectRoot = "/" + segments.slice(0, vIdx + 1).join("/") + "/";
-      }
       projectRoot = projectRoot.replace(/\/+/g, "/");
 
       const base = document.createElement("base");
