@@ -1,6 +1,5 @@
 (function () {
   const path = window.location.pathname.toLowerCase();
-  const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
   if (path.includes("readme") || path.includes("license")) {
     window.location.replace("./");
     return;
@@ -9,17 +8,6 @@
     const newPath = window.location.pathname.replace(/v5.0-beta/i, "v5.0");
     window.location.replace(newPath + window.location.search + window.location.hash);
     return;
-  }
-
-  if (!isHamuzonGithubIo) return;
-
-  const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
-  const segments = window.location.pathname.split("/").filter(Boolean);
-  const vIdx = segments.findIndex(isVersion);
-  if (vIdx !== -1 && segments.length > vIdx + 1) {
-    const versionRoot =
-      ("/" + segments.slice(0, vIdx + 1).join("/") + "/").replace(/\/+/g, "/");
-    window.location.replace(versionRoot + window.location.search + window.location.hash);
   }
 })();
 
