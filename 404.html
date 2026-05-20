@@ -7,82 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="icon-light.svg" media="(prefers-color-scheme: light)" />
   <link rel="icon" href="icon-dark.svg" media="(prefers-color-scheme: dark)" />
-  <style>
-    :root {
-      --bg: #121212;
-      --text: #f0e6d2;
-      --button-bg: #4b4130;
-      --button-hover: #6a5f48;
-      --focus-outline: #c5b38f;
-    }
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg: #f7f3e9;
-        --text: #3b2f2f;
-        --button-bg: #d8c6a1;
-        --button-hover: #c5b38f;
-        --focus-outline: #927c54;
-      }
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: "Noto Sans JP", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      text-align: center;
-      padding: 2rem;
-      line-height: 1.5;
-    }
-
-    h1 {
-      font-size: clamp(3rem, 14vw, 5rem);
-      margin-bottom: 0.25em;
-      letter-spacing: 0.1em;
-    }
-
-    p {
-      font-size: clamp(1rem, 2.7vw, 1.2rem);
-      margin: 0.25em 0;
-      opacity: 0.95;
-    }
-
-    .subtext {
-      font-size: clamp(0.9rem, 2.2vw, 1rem);
-      opacity: 0.8;
-    }
-
-    a.back {
-      margin-top: 1.8rem;
-      padding: 0.75em 2em;
-      background-color: var(--button-bg);
-      color: var(--text);
-      text-decoration: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      box-shadow: 0 4px 9px rgba(0, 0, 0, 0.55);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    a.back:hover,
-    a.back:focus {
-      background-color: var(--button-hover);
-      outline: 3px solid var(--focus-outline);
-      outline-offset: 2px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.75);
-    }
-  </style>
+    <link rel="stylesheet" href="./404.css" />
 </head>
 <body>
   <h1>404</h1>
@@ -90,57 +15,6 @@
   <p class="subtext">Sorry, the page you’re looking for could not be found.</p>
   <a id="backLink" class="back" href="/">トップページへ戻る</a>
 
-  <script>
-    (function() {
-      const path = window.location.pathname.toLowerCase();
-      const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
-      if (path.includes('readme') || path.includes('license')) {
-        window.location.replace('./');
-        return;
-      }
-      if (path.includes('v5.0-beta')) {
-        const newPath = window.location.pathname.replace(/v5.0-beta/i, 'v5.0');
-        window.location.replace(newPath + window.location.search + window.location.hash);
-        return;
-      }
-
-      if (!isHamuzonGithubIo) return;
-
-      const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
-      const segments = window.location.pathname.split("/").filter(Boolean);
-      const vIdx = segments.findIndex(isVersion);
-      if (vIdx !== -1 && segments.length > vIdx + 1) {
-        const versionRoot = ("/" + segments.slice(0, vIdx + 1).join("/") + "/").replace(/\/+/g, '/');
-        window.location.replace(versionRoot + window.location.search + window.location.hash);
-      }
-    })();
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const isVersion = (s) => /^v\d+(\.\d+)*(-[a-z]+)?$/i.test(s);
-      const segments = location.pathname.split("/").filter(Boolean);
-      const vIdx = segments.findIndex(isVersion);
-      const backLink = document.getElementById("backLink");
-      const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
-
-      let projectRoot = isHamuzonGithubIo ? "/calendar/" : "/";
-      if (vIdx !== -1 && !isHamuzonGithubIo) {
-        projectRoot = "/" + segments.slice(0, vIdx).join("/") + "/";
-      }
-      projectRoot = projectRoot.replace(/\/+/g, '/');
-
-      if (vIdx !== -1) {
-        const versionRoot = ("/" + segments.slice(0, vIdx + 1).join("/") + "/").replace(/\/+/g, '/');
-        const currentPath = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
-
-        if (currentPath.toLowerCase() === versionRoot.toLowerCase()) {
-          backLink.href = projectRoot;
-        } else {
-          backLink.href = versionRoot;
-        }
-      } else {
-        backLink.href = projectRoot;
-      }
-    });
-  </script>
+    <script src="./404.js"></script>
 </body>
 </html>
