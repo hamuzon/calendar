@@ -12,8 +12,8 @@
       const isHamuzonGithubIo = location.hostname === "hamuzon.github.io";
 
       let projectRoot = isHamuzonGithubIo ? "/calendar/" : "/";
-      if (vIdx !== -1 && !isHamuzonGithubIo) {
-        projectRoot = "/" + segments.slice(0, vIdx).join("/") + "/";
+      if (vIdx !== -1) {
+        projectRoot = "/" + segments.slice(0, vIdx + 1).join("/") + "/";
       }
       projectRoot = projectRoot.replace(/\/+/g, "/");
 
