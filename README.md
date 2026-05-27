@@ -59,7 +59,7 @@ All data can be **saved and loaded in JSON format**, making backups and migratio
 このアプリは以下のURLからオンラインで利用できます：  
 📎 [hamuzon.github.io/calendar/](https://hamuzon.github.io/calendar/)
 
-アクセスすると、バージョン「v1.0」「v2.0」「v3.0」「v4.0」の選択画面が表示されます。  
+アクセスすると、バージョン「v1.0」「v2.0」「v3.0」「v4.0」「v5.0」の選択画面が表示されます。  
 それぞれのUIや機能の違いを確認して使用できます。
 
 ---
@@ -67,7 +67,7 @@ All data can be **saved and loaded in JSON format**, making backups and migratio
 This app is available online at:  
 📎 [hamuzon.github.io/calendar/](https://hamuzon.github.io/calendar/)
 
-When you access the site, a selection screen for versions "v1.0", "v2.0", "v3.0", and "v4.0" will be displayed.  
+When you access the site, a selection screen for versions "v1.0", "v2.0", "v3.0", "v4.0", and "v5.0" will be displayed.  
 
 You can compare and use the different UI and features of each version.
 
@@ -114,13 +114,3 @@ You can compare and use the different UI and features of each version.
 8. Use the "Load" button to import previously saved data.  
 
 ---
-
-## 👤 開発・管理 / Development & Management
-
-このプロジェクトは**個人の趣味開発**として作成されています。  
-ご意見・バグ報告などございましたら、お気軽にご連絡ください。
-
----
-
-This project is developed as a **personal hobby**.  
-Feel free to reach out for any feedback or bug reports.
