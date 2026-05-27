@@ -395,9 +395,11 @@ function openModal(date) {
   addEventBtn.textContent = "追加 / Add";
   modalBg.style.display = "flex";
   newEventText.focus();
+  updateUrlQuery({ year: date.getFullYear(), month: date.getMonth(), day: date.getDate() });
 }
 function closeModal() {
   modalBg.style.display = "none";
+  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
 }
 modalBg.addEventListener("click", e => {
   if (e.target === modalBg) closeModal();
@@ -694,9 +696,18 @@ nextMonthBtn.addEventListener("click", () => {
   drawCalendar(currentDate);
 });
 todayBtn.addEventListener("click", () => {
+  // 1. 今日の日付に戻す
   currentDate = new Date();
-  currentDate.setHours(0,0,0,0);
-  updateUrlQuery({ year: currentDate.getFullYear(), month: currentDate.getMonth(), day: currentDate.getDate() });
+  // 2. 時刻リセット（0:00）
+  currentDate.setHours(0, 0, 0, 0);
+
+  // 3. URLを「今日基準」に更新（y / m のみ。クリエパスからは 日をけす）
+  updateUrlQuery({
+    year: currentDate.getFullYear(),
+    month: currentDate.getMonth()
+  });
+
+  // 4. カレンダー再描画
   drawCalendar(currentDate);
 });
 
@@ -834,8 +845,9 @@ async function handleSave() {
   if ('showSaveFilePicker' in window) {
     try {
       const timestamp = getTimestampForFileName();
+      const defaultExt = calendarData.config.saveFormat === "ics" ? ".ics" : ".json";
       const handle = await window.showSaveFilePicker({
-        suggestedName: `Calendar-${CURRENT_SAVE_VERSION}_${timestamp}`,
+        suggestedName: `Calendar-${CURRENT_SAVE_VERSION}_${timestamp}${defaultExt}`,
         types: [
           { description: 'JSON File', accept: { 'application/json': ['.json'] } },
           { description: 'iCalendar File', accept: { 'text/calendar': ['.ics'] } }
