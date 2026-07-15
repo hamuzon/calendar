@@ -40,7 +40,7 @@ jobs:
         with:
           ref: 'main'
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Inject FQDN normalization script
         run: |
           # 全てのHTMLファイルの<head>直後に正規化スクリプトを挿入
