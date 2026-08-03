@@ -48,6 +48,10 @@ currentDate.setHours(0, 0, 0, 0);
 let calendarData = {
   version: CURRENT_SAVE_VERSION,
   events: {},
+  lastViewed: {
+    year: currentDate.getFullYear(),
+    month: currentDate.getMonth()
+  },
   tagColors: {
     "#仕事": "#4a7c59",
     "#プライベート": "#d27c7c",
@@ -85,6 +89,10 @@ function loadFromLocalStorage() {
     try {
       const data = JSON.parse(stored);
       calendarData = convertDataToV4(data);
+      if (calendarData.lastViewed && Number.isInteger(calendarData.lastViewed.year) && Number.isInteger(calendarData.lastViewed.month)) {
+        currentDate = new Date(calendarData.lastViewed.year, calendarData.lastViewed.month, 1);
+        currentDate.setHours(0, 0, 0, 0);
+      }
     } catch {}
   }
 }
@@ -207,6 +215,8 @@ function drawCalendar(date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   monthYear.textContent = `${year}年 ${month + 1}月`;
+  calendarData.lastViewed = { year, month };
+  saveToLocalStorage();
 
   const firstDay = new Date(year, month, 1);
   const firstWeekday = firstDay.getDay();

@@ -23,6 +23,10 @@ let calendarData = {
     searchEnabled: false,
     saveFormat: "json",
     searchQuery: ""
+  },
+  lastViewed: {
+    year: currentDate.getFullYear(),
+    month: currentDate.getMonth()
   }
 };
 
@@ -98,7 +102,9 @@ function eventUniqueKey(dateStr, startTime, text) {
 // --- ローカルストレージ読み書き ---
 function saveToLocalStorage() {
   calendarData.meta.updatedAt = new Date().toISOString();
-  // 保存時はインデントなし（軽量化）
+  if (!calendarData.lastViewed) {
+    calendarData.lastViewed = { year: currentDate.getFullYear(), month: currentDate.getMonth() };
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(calendarData));
 }
 
@@ -125,9 +131,13 @@ function loadFromLocalStorage() {
         data = convertDataToV5(data);
       }
       if (!data.config.searchQuery) data.config.searchQuery = ""; // 検索キーワードの初期化
-        // 保存形式の初期化
-        if (!data.config.saveFormat) data.config.saveFormat = "json";
+      // 保存形式の初期化
+      if (!data.config.saveFormat) data.config.saveFormat = "json";
       calendarData = data;
+      if (data.lastViewed && Number.isInteger(data.lastViewed.year) && Number.isInteger(data.lastViewed.month)) {
+        currentDate = new Date(data.lastViewed.year, data.lastViewed.month, 1);
+        currentDate.setHours(0, 0, 0, 0);
+      }
     } catch {}
   }
 }
@@ -272,6 +282,8 @@ function drawCalendar(date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   monthYear.textContent = `${year}年 ${month + 1}月`;
+  calendarData.lastViewed = { year, month };
+  saveToLocalStorage();
   
   if (searchModalBg.style.display === "flex") renderFilters(); // フィルタ表示中のみ更新
   updateFilterStatusBanner();

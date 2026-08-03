@@ -45,4 +45,3 @@
 
 - ⚙️ **URL Query Parameter Sync & Direct Linking**  
   Supports direct linking to any specific year, month, or day via URL query parameters like `?y=2026&m=6&d=18`. It also fully syncs the active search query `q` and selected tags `tags` with the browser URL.
-
