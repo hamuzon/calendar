@@ -24,10 +24,7 @@ let calendarData = {
     saveFormat: "json",
     searchQuery: ""
   },
-  lastViewed: {
-    year: currentDate.getFullYear(),
-    month: currentDate.getMonth()
-  }
+  lastViewed: null
 };
 
 // --- HTML要素取得 ---
@@ -80,6 +77,10 @@ const notificationCloseBtn = document.getElementById("notification-close-btn");
 // --- 状態管理 ---
 let currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
+
+if (!calendarData.lastViewed) {
+  calendarData.lastViewed = { year: currentDate.getFullYear(), month: currentDate.getMonth() };
+}
 
 // --- 通知済みイベント管理 ---
 const notifiedEvents = new Set();
