@@ -190,24 +190,24 @@
 
         <h3>v1.0 のファイル名</h3>
         <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
-        <p><code>例: calendar_events_20250710_183015.json</code></p>
+        <p><code>例: <span class="filename-example filename-v1">calendar_events_20250710_183015.json</span></code></p>
 
         <h3>v2.0 のファイル名</h3>
         <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-        <p><code>例: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
+        <p><code>例: <span class="filename-example filename-v2">Calendar-2.0_2025_07_10_18_30_15.json</span></code></p>
 
         <h3>v3.0 のファイル名</h3>
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-        <p><code>例: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
+        <p><code>例: <span class="filename-example filename-v3">Calendar-3.0_2025_07_10_18_30_15.json</span></code></p>
 
         <h3>v4.0 のファイル名</h3>
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json</code></p>
-        <p><code>例: Calendar-4.0_2025-07-10_18-30-15.json</code></p>
+        <p><code>例: <span class="filename-example filename-v4">Calendar-4.0_2025-07-10_18-30-15.json</span></code></p>
 
         
         <h3>v5.0 のファイル名</h3>
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json / .ics</code></p>
-        <p><code>例: Calendar-5.0_2025-10-27_10-00-00.json</code></p>
+        <p><code>例: <span class="filename-example filename-v5">Calendar-5.0_2025_07_10_18_30_15.json</span></code></p>
        
 
         <p>
@@ -227,7 +227,7 @@
         <a class="version-btn" href="v2.0/index.html">🗓️ v2.0 🕰️</a>
         <a class="version-btn" href="v3.0/index.html">🗓️ v3.0 ✏️</a>
         <a class="version-btn" href="v4.0/index.html">🗓️ v4.0 📒</a>
-         <a class="version-btn" href="v5.0/index.html">🗓️ v5.0 📝</a>
+        <a class="version-btn" href="v5.0/index.html">🗓️ v5.0 📝</a>
       </div>
 
       <section>
@@ -235,24 +235,24 @@
 
         <h3>v1.0 format</h3>
         <p><code>calendar_events_[YYYY][MM][DD]_[HH][mm][ss].json</code></p>
-        <p><code>Example: calendar_events_20250710_183015.json</code></p>
+        <p><code>Example: <span class="filename-example filename-v1">calendar_events_20250710_183015.json</span></code></p>
 
         <h3>v2.0 format</h3>
         <p><code>Calendar-[CALENDAR_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-        <p><code>Example: Calendar-2.0_2025_07_10_18_30_15.json</code></p>
+        <p><code>Example: <span class="filename-example filename-v2">Calendar-2.0_2025_07_10_18_30_15.json</span></code></p>
 
         <h3>v3.0 format</h3>
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]_[MM]_[DD]_[HH]_[mm]_[ss].json</code></p>
-        <p><code>Example: Calendar-3.0_2025_07_10_18_30_15.json</code></p>
+        <p><code>Example: <span class="filename-example filename-v3">Calendar-3.0_2025_07_10_18_30_15.json</span></code></p>
 
         <h3>v4.0 format</h3>
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json</code></p>
-        <p><code>Example: Calendar-4.0_2025-07-10_18-30-15.json</code></p>
+        <p><code>Example: <span class="filename-example filename-v4">Calendar-4.0_2025-07-10_18-30-15.json</span></code></p>
 
         
         <h3>v5.0 format</h3>
         <p><code>Calendar-[CURRENT_SAVE_VERSION]_[YYYY]-[MM]-[DD]_[HH]-[mm]-[ss].json / .ics</code></p>
-        <p><code>Example: Calendar-5.0_2025-10-27_10-00-00.json</code></p>
+        <p><code>Example: <span class="filename-example filename-v5">Calendar-5.0_2025_07_10_18_30_15.json</span></code></p>
        
 
         <p>
@@ -297,6 +297,33 @@
     function toggleLang() {
       setLang(currentLang === 'ja' ? 'en' : 'ja');
     }
+
+    function updateV5FilenameExamples() {
+      const now = new Date();
+      const pad = value => String(value).padStart(2, '0');
+      const hasValidDate = !Number.isNaN(now.getTime());
+      const year = hasValidDate ? now.getFullYear() : 2025;
+      const month = hasValidDate ? now.getMonth() + 1 : 7;
+      const day = hasValidDate ? now.getDate() : 10;
+      const hours = hasValidDate ? now.getHours() : 18;
+      const minutes = hasValidDate ? now.getMinutes() : 30;
+      const seconds = hasValidDate ? now.getSeconds() : 15;
+
+      const filenames = {
+        'filename-v1': `calendar_events_${year}${pad(month)}${pad(day)}_${pad(hours)}${pad(minutes)}${pad(seconds)}.json`,
+        'filename-v2': `Calendar-2.0_${year}_${pad(month)}_${pad(day)}_${pad(hours)}_${pad(minutes)}_${pad(seconds)}.json`,
+        'filename-v3': `Calendar-3.0_${year}_${pad(month)}_${pad(day)}_${pad(hours)}_${pad(minutes)}_${pad(seconds)}.json`,
+        'filename-v4': `Calendar-4.0_${year}-${pad(month)}-${pad(day)}_${pad(hours)}-${pad(minutes)}-${pad(seconds)}.json`,
+        'filename-v5': `Calendar-5.0_${year}_${pad(month)}_${pad(day)}_${pad(hours)}_${pad(minutes)}_${pad(seconds)}.json`
+      };
+
+      document.querySelectorAll('.filename-example').forEach(example => {
+        const version = Object.keys(filenames).find(key => example.classList.contains(key));
+        example.textContent = filenames[version];
+      });
+    }
+
+    updateV5FilenameExamples();
   </script>
 </body>
 
