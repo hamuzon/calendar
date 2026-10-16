@@ -766,6 +766,43 @@ body.theme-dark .filter-clear-btn {
   background: #d15656;
 }
 
+/* ================= 検索モーダル内検索ボックス ================= */
+.search-box {
+  position: relative;
+}
+.search-box::before {
+  content: "🔍";
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+#search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px 9px 36px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background-color: var(--muted-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+#search-input::placeholder {
+  color: var(--text);
+  opacity: 0.45;
+}
+#search-input:focus {
+  border-color: var(--btn-hover);
+  background-color: var(--panel);
+  box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--btn-hover);
+}
+
 /* ================= 検索モーダル内タグ選択 ================= */
 .tag-filters {
   margin-top: 15px;
