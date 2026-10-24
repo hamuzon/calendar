@@ -1,60 +1,135 @@
-# Simple workflow for deploying static content to GitHub Pages
+Simple workflow for deploying static content to GitHub Pages
+
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
 
-  workflow_run:
-    workflows: ["Update Sitemap"]
-    types:
-      - completed
+Runs on pushes targeting the default branch
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+push:
+branches: ["main"]
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+workflow_run:
+workflows: ["Update Sitemap"]
+types:
+- completed
+
+Allows you to run this workflow manually from the Actions tab
+
+workflow_dispatch:
+
+env:
+GA_MEASUREMENT_ID: G-F8HVYVW05H
+
+Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+contents: read
+pages: write
+id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+
+However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+group: "pages"
+cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          ref: 'main'
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-      - name: Inject FQDN normalization script
-        run: |
-          # 全てのHTMLファイルの<head>直後に正規化スクリプトを挿入
-          find . -maxdepth 1 -name "*.html" -not -name "google*.html" -exec sed -i '/<head>/a \  <script>if(window.location.hostname.endsWith(".")){window.location.replace(window.location.href.replace(window.location.hostname,window.location.hostname.slice(0,-1)));}</script>' {} +
-      - name: Remove sensitive files from deployment artifact
-        run: |
-          # デプロイ対象からのみ削除
-          rm -rf functions README.md README readme.md license LICENSE LICENSE.txt _redirects.md _redirects
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
-        
+
+Single deploy job since we're just deploying
+
+deploy:
+if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+environment:
+name: github-pages
+url: ${{ steps.deployment.outputs.page_url }}
+runs-on: ubuntu-latest
+steps:
+- name: Checkout
+uses: actions/checkout@v7
+with:
+ref: 'main'
+
+  - name: Setup Pages
+    uses: actions/configure-pages@v6
+
+  - name: Inject Google Analytics 4
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      if [[ ! "$GA_MEASUREMENT_ID" =~ ^G-[A-Z0-9]+$ ]]; then
+        echo "Invalid GA4 measurement ID: $GA_MEASUREMENT_ID"
+        exit 1
+      fi
+
+      export GA_ID="$GA_MEASUREMENT_ID"
+
+      python3 <<'PY'
+      import os
+      import re
+      from pathlib import Path
+
+      ga_id = os.environ["GA_ID"]
+      snippet = f'''<!-- Google tag (gtag.js) -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{ga_id}');
+      </script>
+      '''
+
+      updated = 0
+      skipped = 0
+
+      # ルート直下のHTMLのみ対象。google*.html は除外する
+      for html_file in Path(".").glob("*.html"):
+          if html_file.name.startswith("google"):
+              skipped += 1
+              continue
+
+          content = html_file.read_text(encoding="utf-8")
+
+          # 既にGoogleタグがある場合は二重挿入しない
+          if "googletagmanager.com/gtag/js" in content:
+              skipped += 1
+              continue
+
+          # <head> タグの直後に挿入
+          match = re.search(r"<head(?:\s[^>]*)?>", content, re.IGNORECASE)
+          if not match:
+              print(f"Skipped (no head): {html_file}")
+              skipped += 1
+              continue
+
+          content = content[:match.end()] + "\n" + snippet + content[match.end():]
+          html_file.write_text(content, encoding="utf-8")
+          updated += 1
+
+      print(f"GA4 injected: {updated} HTML file(s)")
+      print(f"Skipped: {skipped} HTML file(s)")
+      PY
+
+  - name: Inject FQDN normalization script
+    run: |
+      # 全てのHTMLファイルの<head>直後に正規化スクリプトを挿入
+      find . -maxdepth 1 -name "*.html" -not -name "google*.html" -exec sed -i '/<head>/a \  <script>if(window.location.hostname.endsWith(".")){window.location.replace(window.location.href.replace(window.location.hostname,window.location.hostname.slice(0,-1)));}</script>' {} +
+
+  - name: Remove sensitive files from deployment artifact
+    run: |
+      # デプロイ対象からのみ削除
+      rm -rf functions README.md README readme.md license LICENSE LICENSE.txt _redirects.md _redirects
+
+  - name: Upload artifact
+    uses: actions/upload-pages-artifact@v5
+    with:
+      # Upload entire repository
+      path: '.'
+
+  - name: Deploy to GitHub Pages
+    id: deployment
+    uses: actions/deploy-pages@v5
